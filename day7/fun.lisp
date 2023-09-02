@@ -312,7 +312,7 @@
 ;; AOC22> (extract-dirs)
 ;; (NIL ("/a") ("/a" "/e") ("/d"))
 
-(remove-duplicates *known-files*)
+;;(remove-duplicates *known-files*)
 
 (defun part1()
   (process "input"))
@@ -354,26 +354,27 @@
 
 ;;  (setq *sorted-files* (sort *known-files* #'file-compare)))
 
-(defparameter *my-hash* (make-hash-table :test #'equalp))
 
-;; zero out
-(setf (gethash '("/" "/d") *my-hash*) (list))
+;; (defparameter *my-hash* (make-hash-table :test #'equalp))
 
-;; add entry
-(let ((dir `("/" "/d")))
-  (setf (gethash dir *my-hash*)
-	(cons `(1 2 3) (gethash dir *my-hash*)))
+;; ;; zero out
+;; (setf (gethash '("/" "/d") *my-hash*) (list))
 
-  (setf (gethash dir *my-hash*)
-	(cons `(4 5 6) (gethash dir *my-hash*)))
+;; ;; add entry
+;; (let ((dir `("/" "/d")))
+;;   (setf (gethash dir *my-hash*)
+;; 	(cons `(1 2 3) (gethash dir *my-hash*)))
 
-  (setf (gethash dir *my-hash*)
-	(cons `(7 8 9) (gethash dir *my-hash*))))
+;;   (setf (gethash dir *my-hash*)
+;; 	(cons `(4 5 6) (gethash dir *my-hash*)))
 
-(gethash `("/" "/d") *my-hash*)
+;;   (setf (gethash dir *my-hash*)
+;; 	(cons `(7 8 9) (gethash dir *my-hash*))))
 
-(setf (gethash `("/" "/d") *my-hash*)
-	(cons `(a b c) (gethash `("/" "/d") *my-hash*)))
+;; (gethash `("/" "/d") *my-hash*)
+
+;; (setf (gethash `("/" "/d") *my-hash*)
+;; 	(cons `(a b c) (gethash `("/" "/d") *my-hash*)))
   
 
 ;; for each directory-subdirectory in sorted
