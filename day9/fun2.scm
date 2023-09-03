@@ -1,6 +1,12 @@
 
 #|
 
+errors 
+
+'tag-79-x-not-implemented hx hy hx2 hy2 tx ty dx dy
+(tag-79-x-not-implemented 3  3   2   4   2  2  0  2)
+
+
 ---------------------------------------------------------
 read file - get motions
 
@@ -142,7 +148,7 @@ X
 
 ;; see print logging on some 
 (define-macro (dbug . args)
-  (if #t
+  (if #f
       `(format #t ,@args)
       #t))
 
@@ -249,6 +255,34 @@ X
 	(dbug "tag 50-a active~%") (list (- tx 1) (- ty 1)))
        ((and (= dx -2)(= dy -1)) ;; all in line but gap needs closing
 	(dbug "tag 50-b active~%") (list (- tx 1) (- ty 1)))
+
+
+       ;;  0 2 ?? dunno what do - chase it i guess ...
+       ((and (= dx 0)(= dy 2)) ;; no action required
+	(dbug "tag 47-a active~%") (list tx (+ ty 1)))
+       ((and (= dx 2)(= dy 0)) ;; no action required
+	(dbug "tag 47-b active~%") (list (+ tx 1) ty))
+       ((and (= dx -2)(= dy 0)) ;; no action required
+	(dbug "tag 47-c active~%") (list (- tx 1) ty))
+       ((and (= dx 0)(= dy -2)) ;; no action required
+	(dbug "tag 47-d active~%") (list tx (- ty 1)))
+
+       
+       
+       ;; <--------- these undocumented just guessed -------------->
+       ;; 2 2
+       ;; 2 -2
+       ;; -2 2
+       ;; -2 -2
+       ((and (= dx 2)(= dy 2)) ;; all in line but gap needs closing
+	(dbug "tag 61-a active~%") (list (+ tx 1) (+ ty 1)))
+       ((and (= dx 2)(= dy -2)) ;; all in line but gap needs closing
+	(dbug "tag 62-b active~%") (list (+ tx 1) (- ty 1)))
+
+       ((and (= dx -2)(= dy 2)) ;; all in line but gap needs closing
+	(dbug "tag 63-c active~%") (list (- tx 1) (+ ty 1)))
+       ((and (= dx -2)(= dy -2)) ;; all in line but gap needs closing
+	(dbug "tag 64-d active~%") (list (- tx 1) (- ty 1)))
        
        (else
 	(dbug "tag 79-x active ERR~%") (error (list 'tag-79-x-not-implemented hx hy hx2 hy2 tx ty dx dy)))))))
@@ -599,12 +633,6 @@ only movement of head is u = up
 	 (sane-commands (cdr (cdr xs)))))))
 
 
-(define lines2 (get-lines "input2"))
-(assert (sane-commands lines2))
-
-(define lines (get-lines "input"))
-(assert (sane-commands lines))
-
 
 
 (define (model commands)
@@ -735,14 +763,15 @@ only movement of head is u = up
 		   (else ".")))))
     ;;use letrec
     (format #t "~%")
-    (format #t "~a ~a ~a ~a ~a ~a ~a~%" (dig1 1 7) (dig1 2 7) (dig1 3 7) (dig1 4 7) (dig1 5 7) (dig1 6 7) (dig1 7 7))
-    (format #t "~a ~a ~a ~a ~a ~a ~a~%" (dig1 1 6) (dig1 2 6) (dig1 3 6) (dig1 4 6) (dig1 5 6) (dig1 6 6) (dig1 7 6))
-    (format #t "~a ~a ~a ~a ~a ~a ~a~%" (dig1 1 5) (dig1 2 5) (dig1 3 5) (dig1 4 5) (dig1 5 5) (dig1 6 5) (dig1 7 5))
-    (format #t "~a ~a ~a ~a ~a ~a ~a~%" (dig1 1 4) (dig1 2 4) (dig1 3 4) (dig1 4 4) (dig1 5 4) (dig1 6 4) (dig1 7 4))
-    (format #t "~a ~a ~a ~a ~a ~a ~a~%" (dig1 1 3) (dig1 2 3) (dig1 3 3) (dig1 4 3) (dig1 5 3) (dig1 6 3) (dig1 7 3))
-    (format #t "~a ~a ~a ~a ~a ~a ~a~%" (dig1 1 2) (dig1 2 2) (dig1 3 2) (dig1 4 2) (dig1 5 2) (dig1 6 2) (dig1 7 2))
-    (format #t "~a ~a ~a ~a ~a ~a ~a~%" (dig1 1 1) (dig1 2 1) (dig1 3 1) (dig1 4 1) (dig1 5 1) (dig1 6 1) (dig1 7 1))
+    (format #t "~a ~a ~a ~a ~a ~a ~%" (dig1 1 7) (dig1 2 7) (dig1 3 7) (dig1 4 7) (dig1 5 7) (dig1 6 7) )
+    (format #t "~a ~a ~a ~a ~a ~a ~%" (dig1 1 6) (dig1 2 6) (dig1 3 6) (dig1 4 6) (dig1 5 6) (dig1 6 6) )
+    (format #t "~a ~a ~a ~a ~a ~a ~%" (dig1 1 5) (dig1 2 5) (dig1 3 5) (dig1 4 5) (dig1 5 5) (dig1 6 5) )
+    (format #t "~a ~a ~a ~a ~a ~a ~%" (dig1 1 4) (dig1 2 4) (dig1 3 4) (dig1 4 4) (dig1 5 4) (dig1 6 4) )
+    (format #t "~a ~a ~a ~a ~a ~a ~%" (dig1 1 3) (dig1 2 3) (dig1 3 3) (dig1 4 3) (dig1 5 3) (dig1 6 3) )
+    (format #t "~a ~a ~a ~a ~a ~a ~%" (dig1 1 2) (dig1 2 2) (dig1 3 2) (dig1 4 2) (dig1 5 2) (dig1 6 2) )
+    (format #t "~a ~a ~a ~a ~a ~a ~%" (dig1 1 1) (dig1 2 1) (dig1 3 1) (dig1 4 1) (dig1 5 1) (dig1 6 1) )
     )))
+
 
 
 
@@ -773,20 +802,139 @@ only movement of head is u = up
 			    (help (cdr xs))))))))
       (help path))))
 
+(define lines (get-lines "input"))
+(assert (sane-commands lines))
 
-;; (process t-path)
-(define h-path2 (model lines2))
+(define lines2 (get-lines "input2"))
+(assert (sane-commands lines2))
 
-(define t-path2 (tail-path h-path2))
-
-(define example-1 (process (length t-path2)))
-
-
-
+(define lines3 (get-lines "input3"))
+(assert (sane-commands lines3))
 
 
-(define h-path2 (model lines))	  
-      
+
+;; ;; small example one head one tail
+;; (define h-path2 (model lines2))
+;; (define t-path2 (tail-path h-path2))
+;; (define example-1 (process t-path2))
+;; (define example-1-length (length example-1))
+
+;; ;; bigger example one head one tail
+;; (define h-path (model lines))
+;; (define t-path (tail-path h-path))
+;; (define example-2 (process t-path))
+;; (define example-2-length (length example-2))
+
+
+;; ------------- now rope HEAD can now move diagonally whereas before it could not
+;;   -------------------------as it was only up , down , left , right ...........
+;; smaller example one head nine tails
+(define h-path (model lines3)) ;;<<<------- change lines lines2 or lines3
+(define t1-path (tail-path h-path))
+(define t2-path (tail-path t1-path))
+(define t3-path (tail-path t2-path))
+(define t4-path (tail-path t3-path))
+(define t5-path (tail-path t4-path))
+(define t6-path (tail-path t5-path))
+(define t7-path (tail-path t6-path))
+(define t8-path (tail-path t7-path))
+(define t9-path (tail-path t8-path))
+
+(define example-3 (process t9-path))
+(define example-3-length (length example-3))
+
+;;(format #t "best guess at t-9 solution is with ~%length of [ ~a ] squares ~%" example-3-length)
+
+
+
+
+(define (viz-tool-show hpos t1pos t2pos t3pos t4pos t5pos t6pos t7pos t8pos t9pos)
+  (let ((width 26) ;; 6
+	(height 21)) ;; 5
+  (letrec ((help (lambda (x y)
+		   (cond
+		    ((< y 1) 'done)
+		    ((> x width)
+		     (format #t "~%") ; newline
+		     (help 1 (- y 1)))
+		    (else
+		     (begin
+		       (let ((pos (list x y))
+			     (nog 0))
+			 ;;(format #t " [")
+			 (format #t " ")
+			 (when (equal? pos hpos) (format #t  "H") (set! nog (+ 1 nog)))
+			 (when (equal? pos t1pos) (format #t "1") (set! nog (+ 1 nog)))
+			 (when (equal? pos t2pos) (format #t "2") (set! nog (+ 1 nog)))
+			 (when (equal? pos t3pos) (format #t "3") (set! nog (+ 1 nog)))
+			 (when (equal? pos t4pos) (format #t "4") (set! nog (+ 1 nog)))
+			 (when (equal? pos t5pos) (format #t "5") (set! nog (+ 1 nog)))
+			 (when (equal? pos t6pos) (format #t "6") (set! nog (+ 1 nog)))
+			 (when (equal? pos t7pos) (format #t "7") (set! nog (+ 1 nog)))
+			 (when (equal? pos t8pos) (format #t "8") (set! nog (+ 1 nog)))
+			 (when (equal? pos t9pos) (format #t "9") (set! nog (+ 1 nog)))
+
+			 (when (= nog 0)
+			   (format #t " . "))
+			 ;; (while (< nog 10)
+			 ;;   (format #t ".")
+			 ;;   (set! nog (+ nog 1)))			 
+			 ;;(format #t "] ")
+			 (format #t " ")
+			 (help (+ x 1) y))))))))
+    (format #t "~%")
+    (help 1 height)
+    (format #t "~%"))))
+  
+
+(define (viz-tool)
+  (let ((hs h-path)
+	(t1s t1-path)
+	(t2s t2-path)
+	(t3s t3-path)
+	(t4s t4-path)
+	(t5s t5-path)
+	(t6s t6-path)
+	(t7s t7-path)
+	(t8s t8-path)
+	(t9s t9-path))
+    (while (and (not (null? hs)) (not (null? t1s)) (not (null? t2s)) (not (null? t3s)) (not (null? t4s)) (not (null? t5s))
+		(not (null? t6s)) (not (null? t7s)) (not (null? t8s)) (not (null? t9s)))
+      (let ((hpos (first hs)) (t1pos (first t1s)) (t2pos (first t2s)) (t3pos (first t3s)) (t4pos (first t4s)) (t5pos (first t5s))
+	    (t6pos (first t6s)) (t7pos (first t7s)) (t8pos (first t8s)) (t9pos (first t9s)))
+
+	(viz-tool-show hpos t1pos t2pos t3pos t4pos t5pos t6pos t7pos t8pos t9pos)
+
+	;; next positions everyone ...
+	(set! hs (cdr hs))	
+	(set! t1s (cdr t1s))
+	(set! t2s (cdr t2s))
+	(set! t3s (cdr t3s))
+	(set! t4s (cdr t4s))
+	(set! t5s (cdr t5s))
+	(set! t6s (cdr t6s))
+	(set! t7s (cdr t7s))
+	(set! t8s (cdr t8s))
+	(set! t9s (cdr t9s))
+	))))
+
+
+;; use viz-tool on smaller examples , big examples just a blur on screeen
+(viz-tool)
+
+
+
+
+
+	
+	
+	
+	
+	
+
+	
+
+
 
 
 
