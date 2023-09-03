@@ -2,6 +2,47 @@
 #|
 
 ---------------------------------------------------------
+read file - get motions
+
+rather than simulating all pieces of rope all at once
+
+run the head through motions to get a path
+
+start piece rope at (1 1) like head
+given know head current position , head next position , "tail" current postion
+compute tail next position
+
+iterate down "heads" path to generate a path for "tail"
+
+then this "tail" is now our head
+next "tail" placed at (1 1) see how it behaves
+
+1 ) run head through commands
+
+head ((1 1)(2 1)(3 1) ...)
+
+2 ) using head's path and tail starts at 1 1 compute tails path
+
+tail-1 ((1 1) ....)  its path
+
+3) using tail-1 path and start tail-2 at 1 1 compute tail-2's path
+
+tail-2 ((1 1) ....)  its path
+
+...
+...
+
+tail-9 ((1 1) ...) its path ...
+
+remove duplicate squares reached by tail-9
+
+then count them up
+
+your'e done with day 9 aoc 2022
+
+---------------------------------------------------------
+testing the motion is correct - 36 motions to do.
+
 . . .
 . X .
 . . .
@@ -15,7 +56,6 @@ total 36 outcomes to cater for.
 
 seems kinda obvious now , but gives a robust way to test
 going right direction
-
 ---------------------------------------------------------
 
 complexity rises it is simple to get distracted from what would
@@ -39,6 +79,14 @@ simply a reduction rotate left ? map reduce?
 ;;(use-modules (srfi srfi-1))
 (define first car)
 (define second (lambda (x) (car (cdr x))))
+
+;; guile error handling??
+;; roll your own assert macro
+(define-macro (assert x)
+  (let ((g (gensym)))
+    `(let ((,g ,x))
+       (if ,g ,g (error (list 'assertion 'failed ,g 'expression 'was ',x))))))
+
 
 
 #|
@@ -94,7 +142,7 @@ X
 
 ;; see print logging on some 
 (define-macro (dbug . args)
-  (if #f
+  (if #t
       `(format #t ,@args)
       #t))
 
@@ -280,6 +328,8 @@ X
     (format #t "~a ~a ~a ~a ~a ~a ~a~%" (dig3 1 2) (dig3 2 2) (dig3 3 2) (dig3 4 2) (dig3 5 2) (dig3 6 2) (dig3 7 2))
     (format #t "~a ~a ~a ~a ~a ~a ~a~%" (dig3 1 1) (dig3 2 1) (dig3 3 1) (dig3 4 1) (dig3 5 1) (dig3 6 1) (dig3 7 1))    
     )))
+
+
 
 
 
@@ -521,6 +571,222 @@ only movement of head is u = up
   (test-8l)
   (test-9l)
   )
+
+
+
+;; not much correlation to how array looks on screen to x y coordinates
+;; load input file into lines
+(define (get-lines filename)
+  (let ((lines '()))
+    (call-with-input-file filename
+      (lambda (port)
+	(letrec ((self (lambda ()
+			 (let ((obj (read port)))
+			   (cond
+			    ((eof-object? obj)
+			     (reverse lines))
+			    (#t (set! lines (cons obj lines))
+			       (self)))))))
+	  (self))))))
+
+(define (sane-commands xs)
+  (cond
+   ((null? xs) #t)
+   (#t (let ((letter (first xs))
+	     (num (second xs)))
+	 (assert (member letter '(R L U D)))
+	 (assert (integer? num))
+	 (sane-commands (cdr (cdr xs)))))))
+
+
+(define lines2 (get-lines "input2"))
+(assert (sane-commands lines2))
+
+(define lines (get-lines "input"))
+(assert (sane-commands lines))
+
+
+
+(define (model commands)
+  (let ((path '())
+	(x 1)
+	(y 1))    
+    (letrec ((report (lambda ()
+		       (set! path (cons (list x y) path))))
+	     (help
+	      (lambda (cmds)
+		(cond
+		 ((null? cmds) 'done)
+		 (#t (let ((dir (first cmds))
+			   (dist (second cmds)))
+		       (cond
+			((eq? dir 'R)
+			 (format #t "~%========= Right ~a ==========~%" dist)
+			 (right dist))
+			((eq? dir 'L)
+			 (format #t "~%========= Left ~a ==========~%" dist)
+			 (left dist))
+			((eq? dir 'U)
+			 (format #t "~%========= Up ~a ==========~%" dist)
+			 (up dist))
+			((eq? dir 'D)
+			 (format #t "~%========= Down ~a ==========~%" dist)
+			 (down dist))
+			(#t (error "model.help DIRECTION required R L U D : dir was " dir )))
+		       ;; recurse + drop 2 items DIRECTION DISTANCE
+		       (help (cdr (cdr cmds))))))))
+	     (right (lambda (dist)
+		      (cond
+		       ((< dist 1) 'done)  ;; right + model tail response
+		       (#t (set! x (+ x 1))
+			   (report)
+			   (right (- dist 1))))))
+	     (left (lambda (dist)
+		     (cond
+		      ((< dist 1) 'done)  ;; left + model tail response
+		      (#t (set! x (- x 1))
+			  ;; report before clobber 
+			  (report)	
+			  (left (- dist 1))))))
+	     (up (lambda (dist)
+		   (cond
+		    ((< dist 1) 'done)  ;; up + model tail response
+		    (#t (set! y (+ y 1))
+			  ;; report before clobber 
+			  (report)	
+			  (up (- dist 1))))))
+	     (down (lambda (dist)
+		     (cond
+		      ((< dist 1) 'done)  ;; down + model tail response
+		      (#t (set! y (- y 1))
+			  ;; report before clobber 
+			  (report)	
+			  (down (- dist 1)))))))  
+      (report)
+      (help commands)
+      (reverse path))))
+
+
+;; ------------------------------------
+
+(define (tail-path path-head)
+  (let ((path '()))
+    (letrec ((help (lambda (xs pos1 pos2 pos3)
+		     (dbug "help.xs =~a~%" xs)
+		     (dbug "help.pos1 =~a~%" pos1)
+		     (dbug "help.pos2 =~a~%" pos2)
+		     (dbug "help.pos3 =~a~%" pos3)	  
+		     (cond
+		      ((null? xs)
+		       (dbug "help.xs is null --- ending here ~%")
+		       ;; tack on last gasp ?
+		       (let ((pos4 (follow pos1 pos2 pos3)))
+			 (dbug "help.gasp.pos4 =~a~%" pos4)			      	
+			 (set! path (cons pos4 path))
+			 (dbug "help.gasp.path =~a~%" path))
+		       ;; done
+		       path)
+		      (else (let ((dummy (car xs)))
+			      (dbug "help.dummy =~a~%" dummy)
+			      ;; dummy is "head's" next position
+			      (let ((pos4 (follow pos1 pos2 pos3)))
+				(dbug "help.pos4 =~a~%" pos4)
+			      	
+				(set! path (cons pos4 path))
+				(dbug "help.path =~a~%" path)
+			      	
+				;; done with pos3 onto pos4
+				;; pos1 disgarded
+				;; pos2 to dummy is next transition head made
+				(if (not (null? dummy))
+				    (begin
+				      (dbug "help.dummy NOT null ~a ~%" dummy)
+				      (help (cdr xs) pos2 dummy pos4))
+				    (begin
+				      (dbug "help.dummy null -- finished line 698 ~%")
+				      path
+				      )))))))))
+      ;; all start at 1 1
+      (set! path (cons '(1 1) path))      
+	(dbug "path-head =~a~%" path-head)	
+	(let ((pos1 (first path-head))
+	      (pos2 (second path-head))
+	      (pos3 '(1 1)))
+	  (dbug "pos1 =~a~%" pos1)
+	  (dbug "pos2 =~a~%" pos2)
+	  (dbug "pos3 =~a~%" pos3)	
+	  (reverse (help (cdr (cdr path-head)) pos1 pos2 pos3))))))
+
+
+
+
+(define (viz head tail)
+  (let ((hx (first head))
+	(hy (second head))
+	(tx (first tail))
+	(ty (second tail)))
+  (letrec ((dig1 (lambda (x y)
+		  (dbug2 "DIG x=~a : y=~a : hx =~a : hy = ~a : x=hx ~a: y = hy ~a ~%"
+			  x y hx hy (= x hx) (= y hy))
+		  (cond
+		   ((and (= x hx)(= y hy)(= x tx)(= y ty)) "HT")
+		   ((and (= x hx)(= y hy)) "H")
+		   ((and (= x tx)(= y ty)) "T")
+		   (else ".")))))
+    ;;use letrec
+    (format #t "~%")
+    (format #t "~a ~a ~a ~a ~a ~a ~a~%" (dig1 1 7) (dig1 2 7) (dig1 3 7) (dig1 4 7) (dig1 5 7) (dig1 6 7) (dig1 7 7))
+    (format #t "~a ~a ~a ~a ~a ~a ~a~%" (dig1 1 6) (dig1 2 6) (dig1 3 6) (dig1 4 6) (dig1 5 6) (dig1 6 6) (dig1 7 6))
+    (format #t "~a ~a ~a ~a ~a ~a ~a~%" (dig1 1 5) (dig1 2 5) (dig1 3 5) (dig1 4 5) (dig1 5 5) (dig1 6 5) (dig1 7 5))
+    (format #t "~a ~a ~a ~a ~a ~a ~a~%" (dig1 1 4) (dig1 2 4) (dig1 3 4) (dig1 4 4) (dig1 5 4) (dig1 6 4) (dig1 7 4))
+    (format #t "~a ~a ~a ~a ~a ~a ~a~%" (dig1 1 3) (dig1 2 3) (dig1 3 3) (dig1 4 3) (dig1 5 3) (dig1 6 3) (dig1 7 3))
+    (format #t "~a ~a ~a ~a ~a ~a ~a~%" (dig1 1 2) (dig1 2 2) (dig1 3 2) (dig1 4 2) (dig1 5 2) (dig1 6 2) (dig1 7 2))
+    (format #t "~a ~a ~a ~a ~a ~a ~a~%" (dig1 1 1) (dig1 2 1) (dig1 3 1) (dig1 4 1) (dig1 5 1) (dig1 6 1) (dig1 7 1))
+    )))
+
+
+
+(define (viz-1)
+  (let* ((path-head (model lines2))
+	 (path-tail (tail-path path-head)))
+    (while (and (not (null? path-head))
+		(not (null? path-tail)))
+      (let ((pos-head (car path-head))
+	    (pos-tail (car path-tail)))
+	;;show
+	(viz pos-head pos-tail)
+	(set! path-head (cdr path-head))
+	(set! path-tail (cdr path-tail))))))
+
+
+
+;; remove duplicates
+(define (process path)
+  (let ((visit '()))
+    (letrec ((help (lambda (xs)
+		     (cond
+		      ((null? xs) visit)
+		      (#t (let ((pos (car xs)))
+			    (cond
+			     ((member pos visit) #f)
+			     (else (set! visit (cons pos visit))))
+			    (help (cdr xs))))))))
+      (help path))))
+
+
+;; (process t-path)
+(define h-path2 (model lines2))
+
+(define t-path2 (tail-path h-path2))
+
+(define example-1 (process (length t-path2)))
+
+
+
+
+
+(define h-path2 (model lines))	  
+      
 
 
 
