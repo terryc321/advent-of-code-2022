@@ -1,0 +1,23 @@
+
+DAY 11 of advent of code 2022
+
+
+(monkey-round2 (monkees))
+.......... 
+
+NTH-ROUND 391 
+GC Warning: Repeated allocation of very large block (appr. size 455356 KiB):
+	May lead to memory leak and poor performance
+
+
+NTH-ROUND 392 
+GC Warning: Repeated allocation of very large block (appr. size 276876 KiB):
+	May lead to memory leak and poor performance
+ice-9/boot-9.scm:1685:16: In procedure raise-exception:
+User interrupt
+
+Entering a new prompt.  Type `,bt' for a backtrace or `,q' to continue.
+
+
+clearly some large values appearing in code
+

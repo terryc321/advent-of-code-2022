@@ -1,0 +1,12 @@
+
+
+
+#+name: hello-world
+#+header: :session :var message="Hello World!"
+#+begin_src scheme 
+message
+#+end_src
+
+#+RESULTS: hello-world
+: Hello World!
+
