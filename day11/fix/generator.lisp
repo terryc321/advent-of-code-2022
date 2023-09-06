@@ -166,6 +166,7 @@ give controller a size option to see how much data got obtained
 
 
 
+
 ;; search
 (defun predictor-search (worry loc)
   (let* ((pat (control-data worry loc))
@@ -175,26 +176,31 @@ give controller a size option to see how much data got obtained
     
     ;; (format t "control data length.length pat = ~a ~%" (length pat))
     ;; (format t "control data length.lem        = ~a ~%" lim)
-    
+
+    ;; decided not to chop data off as it may be important ,
+    ;; although i dont think make a difference ....
     ;; chop tail ends off pattern mod 11 length
-    (multiple-value-bind (a r) (truncate lim-original 11)
-      (setq pat (subseq pat 0 (- lim-original r)))
-      (setq lim (length pat)))
+    ;; (multiple-value-bind (a r) (truncate lim-original 11)
+    ;;   (setq pat (subseq pat 0 (- lim-original r)))
+    ;;   (setq lim (length pat)))
     
     ;; (format t "control data length.length pat = ~a ~%" (length pat))
     ;; (format t "control data length.lem        = ~a ~%" lim)
 
     (catch 'solution
     ;; from some subset of control data - make a predictor
-    (loop for ss from 33 to lim by 11 do
+     ;;(loop for ss from 33 to lim by 11 do
+    (loop for ss from 1 to lim do
       (let* ((pre (subseq pat 0 ss))
 	     (pre-lim (length pre)))
 	
 	;; (format t "trying with ~a ~%" pre)
 	;; (format t "trying with length ~a ~%" pre-lim)
 
-	(loop for si from 1 to (- (floor pre-lim 11) 1) do
-	  (let ((pp (make-predictor worry loc pre (* si 11) pat lim))
+	;;(loop for si from 1 to (- (floor pre-lim 11) 1) do
+	(loop for si from 1 to (- pre-lim 1) do
+	  ;;(let ((pp (make-predictor worry loc pre (* si 11) pat lim))
+	  (let ((pp (make-predictor worry loc pre si pat lim))
 		(cp (make-control pat))
 		(errs 0))
 
@@ -226,15 +232,18 @@ give controller a size option to see how much data got obtained
 	    (when (zerop errs)
 	      (format t "solution ~a-~a : tot@ ~a pre@ ~a : ss ~a si ~a (back si*11 = ~a) : proc ~a ~%"
 		      worry loc lim pre-lim ss si (* si 11) pp)
-	      
-	      ;; (funcall pp 'reset)
-	      ;; (record-data-predictions pp lim-original)
+
+	      ;; ------- check ----------
+	      (funcall pp 'reset)
+	      (record-data-predictions pp lim-original)
+
 	      (funcall pp 'reset)
 	      
 	      (throw 'solution pp)
 	      )
 	    
 	    )))))))
+
 
 
 
@@ -262,6 +271,54 @@ give controller a size option to see how much data got obtained
 	      (79 5)
 	      (77 6) (55 6) (63 6) (93 6) (66 6) (90 6) (88 6) (71 6)
 	      (54 7) (97 7) (87 7) (70 7) (59 7) (82 7) (59 7)))))
+
+
+
+
+
+(defun game2 (n-rounds)
+  (let ((procs (brute))
+	(tot-vec (make-array 8)))
+    ;; reset procs if by any stretch brute used a few test values
+    (dolist (p procs)
+      (funcall p 'reset))
+    ;; loop for each round ... for each monkey
+    ;; .. apply any matching worry number that monkey has
+    ;; ...throw it to another monkey
+    ;; ...add interaction monkey number by 1 incf
+    (loop for n from 1 to n-rounds do
+      ;; the nth-round
+      (loop for monkey from 0 to 7 do
+	(dolist (p procs)
+	  (when (= monkey (funcall p 'val))
+	    (incf (aref tot-vec monkey))
+	    (funcall p 'next)
+	    
+
+	    )))
+      (format t "round ~a : ~a ~%" n tot-vec))))
+
+
+
+
+      
+    ;;   (format t "~%~%round ~a ~%" n)
+    ;;   (let* ((rs (mapcar (lambda (x) (list
+    ;; 				      (second x)
+    ;; 				      (nth (- n 1) (fourth x))))
+    ;; 			 routes)))
+    ;; 	(loop for m from 0 to 7 do
+    ;; 	  (let* ((hold (mapcar #'first (remove-if-not (lambda (x)(= (second x)m)) rs)))
+    ;; 		 (hlen (length hold)))
+    ;; 	    (format t "~a : ~a : ~a ~%" m hold hlen)
+    ;; 	    (incf (aref tot-vec m) hlen)))
+	
+    ;; 	(format t "~%AFTER round ~a : ~a ~%" n tot-vec)
+      		    
+    ;; 	(format t "~%")	  
+    ;; 	(format t "~a~%" rs)
+    ;; 	rs))	  
+    ;; tot-vec))
 
 
 
@@ -364,8 +421,21 @@ CL-USER>
 |#
 
 
+#|
+round 10000 : #(185312 113 21328 274669 317346 1 8 7) 
+NIL
 
+CL-USER> (max 185312 113 21328 274669 317346 1 8 7)
+317346
+CL-USER> (max 185312 113 21328 274669 1 8 7)
+274669
+CL-USER> (* ** *)
+87165108474
+CL-USER> (* 317346 274669)
+87165108474
+CL-USER> 
 
+|#
 
 
 
