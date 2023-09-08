@@ -55,6 +55,7 @@ seek      : board int int int int list  int -> ?
   "acctuvwj"
   "abdefghi"))
 
+
 (defun problem-board ()
   (list
 "abaaaaaccccccccaaaaaaaaaaccccaaaaaaaaaccccaacccccccccccccccccccccaaaaaaaaaaaccaaaaaaaaaccccccccccaaaaaaaacaaaaaaccccccccccccccccccccccccccccccccccccccccccaaaaa"
@@ -108,6 +109,14 @@ seek      : board int int int int list  int -> ?
   (problem-board))
 
 
+
+(defun board-width (bd)
+  (length (car bd)))
+
+(defun board-height (bd)
+  (length bd))
+
+
 ;; gets the lisp character in string
 (defun at (bd x y)
   (labels ((char-xy (bd x y)
@@ -129,12 +138,6 @@ seek      : board int int int int list  int -> ?
 	 ((char= ch #\E) (char-code #\z))
 	 (t code))))
     (t 99999)))
-
-(defun board-width (bd)
-  (length (car bd)))
-
-(defun board-height (bd)
-  (length bd))
 
 
 #|
@@ -210,11 +213,12 @@ cannot go if where want to go is more than one level
 (defparameter *sorted-solutions* '())
 
 (defun seek (bd x y xE yE path steps)
+  (format t "~a ~a ~a~%" steps x y)
   ;;(format t "~a ~a : ~a : ~a" x y path steps)
   ;;(format t "at ~a ~a~%" x y)
   (cond
     ((and (= x xE) (= y yE))
-     (format t "solution ~a ~a~%" path steps)
+     ;;(format t "solution ~a ~a~%" path steps)
      (setq *solutions* (cons (reverse (cons (list x y) path)) *solutions*)))
     ((visit-p x y path)
      ;;(format t "backtrack ... old path..~%")
@@ -259,8 +263,8 @@ cannot go if where want to go is more than one level
 (defun solve(bd)
   (destructuring-bind (xS yS) (find-start bd)
     (destructuring-bind (xE yE) (find-finish bd)
-      (format t "xS yS = ~a ~a ~%" xS yS)
-      (format t "xE yE = ~a ~a ~%" xE yE)      
+      ;; (format t "xS yS = ~a ~a ~%" xS yS)
+      ;; (format t "xE yE = ~a ~a ~%" xE yE)      
       (let ((path '())
 	    (steps 0))
 	(setq *solutions* nil)
@@ -270,6 +274,8 @@ cannot go if where want to go is more than one level
 						(length y)))))
 	(setq *solutions* *sorted-solutions*)
 	*solutions*))))
+
+
 
 #|
 barred up ! 1 5 
@@ -298,6 +304,8 @@ there are 31 steps
 remove destructive too ??
 
 |#
+
+;;(solve (board))
 
 
 
