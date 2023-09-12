@@ -1,0 +1,147 @@
+
+
+Proboscidea Volcanium
+
+not interested in how get from "A" to "B"
+may be several ways - sometime multiple ways of equal distance using different tunnels
+only interested in valves that open that increase flow rate
+
+
+focus on valves that if open , enable total pressure relieved to increase
+ignore valves that have zero
+sorted locations from highest flow to lowest flow
+
+
+A B  C  D  E  F  G  H  I  J
+0 13 2  20 3  0  0  22 0  21
+
+A B C D E F G H I J
+
+start at A
+
+
+A -- B
+A -- D
+A -- I
+
+B -- C
+B -- A
+
+C -- D
+C -- B
+
+D -- C
+D -- A
+D -- E
+
+E -- F
+E -- D
+
+G -- F
+G -- H
+
+H -- G
+
+I -- A
+I -- J
+
+J -- I
+
+payoff
+
+B 13
+C 2
+D 20
+E 3
+H 22
+J 21
+
+solve
+
+all valves are closed
+cost of 1 to open valve
+
+want most water flowing for longest time
+
+nobody will spend cost 1 to open valve with flow rate zero 0
+the valves A F G I will never be opened as they flow no water
+
+B 13
+C 2
+D 20
+E 3
+H 22
+J 21
+
+sort most flow rate first
+H 22
+J 21
+D 20
+B 13
+E 3
+C 2
+
+start A
+
+A - H : cost ?
+H - J : cost ?
+J - D : cost ?
+D - B : cost ?
+B - E : cost ?
+E - C : cost ?
+
+
+
+   A   B   C    D   E    F    G    H    I     J
+
+          ABC      ADE
+A //   1   2    1   2    ??   ??   ??   1     ??
+
+B      //
+
+C
+
+D
+
+E
+
+F
+
+G
+
+H
+
+I
+
+J
+
+
+suppose had program P to compute cost of a
+specific journey
+
+could P be reverse engineered or symbolically
+computed to discover optimum path to take ??
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
