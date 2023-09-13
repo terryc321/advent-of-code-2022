@@ -1,0 +1,12 @@
+graph {
+AA -- DD 
+AA -- II 
+AA -- BB 
+BB -- CC 
+CC -- DD 
+DD -- EE 
+EE -- FF 
+FF -- GG 
+GG -- HH 
+II -- JJ 
+} ['a' 'b' 'c']
