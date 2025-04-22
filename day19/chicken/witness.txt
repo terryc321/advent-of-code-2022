@@ -1,0 +1,25 @@
+Blueprint 1:
+  Each ore robot costs 4 ore.
+  Each clay robot costs 2 ore.
+  Each obsidian robot costs 3 ore and 14 clay.
+  Each geode robot costs 2 ore and 7 obsidian.
+
+Blueprint 2:
+  Each ore robot costs 2 ore.
+  Each clay robot costs 3 ore.
+  Each obsidian robot costs 3 ore and 8 clay.
+  Each geode robot costs 3 ore and 12 obsidian.
+
+for blueprint 1 stated best can do is 9 geodes , but simulation shows should be 11 geodes
+
+we have 11 geode
+(next next buy-clay next next buy-clay next next buy-clay next next buy-clay next next next buy-obsidian next next next buy-obsidian next next next buy-geode next next buy-obsidian next next buy-geode next next buy-geode next next)
+
+
+next     - advance state 
+buy-clay - cost 2 ore
+buy-obsidian - cost 3 ore and 14 clay
+buy-geode
+
+
+
