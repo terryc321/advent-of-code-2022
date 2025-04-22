@@ -1,0 +1,274 @@
+
+running program  1
+running program  2
+running program  3
+running program  4
+running program  5
+running program  6
+running program  7
+running program  8
+running program  9
+running program  10
+running program  11
+running program  12
+running program  13
+running program  14
+running program  15
+running program  16
+running program  17
+running program  18
+running program  19
+running blueprint 4
+running program  20
+running program  21
+running program  22
+running blueprint 1
+running blueprint 8
+running blueprint 3
+running blueprint 7
+running blueprint 16
+running blueprint 6
+running blueprint 17
+we have blueprint 6 => 1 geode
+we have blueprint 6 => 2 geode
+running blueprint 5
+running blueprint 11
+we have blueprint 17 => 1 geode
+we have blueprint 17 => 2 geode
+we have blueprint 11 => 1 geode
+we have blueprint 11 => 2 geode
+we have blueprint 8 => 1 geode
+we have blueprint 8 => 2 geode
+running blueprint 10
+running blueprint 12
+we have blueprint 4 => 1 geode
+we have blueprint 4 => 2 geode
+running blueprint 18
+we have blueprint 18 => 1 geode
+running program  23
+running program  24
+running program  25
+running program  26
+we have blueprint 1 => 1 geode
+we have blueprint 1 => 2 geode
+we have blueprint 3 => 1 geode
+we have blueprint 3 => 2 geode
+we have blueprint 17 => 3 geode
+running blueprint 9
+running blueprint 2
+we have blueprint 2 => 1 geode
+we have blueprint 7 => 1 geode
+we have blueprint 7 => 2 geode
+running blueprint 24
+we have blueprint 2 => 2 geode
+running blueprint 25
+we have blueprint 24 => 1 geode
+we have blueprint 24 => 2 geode
+we have blueprint 10 => 1 geode
+we have blueprint 10 => 2 geode
+we have blueprint 16 => 1 geode
+running blueprint 19
+running blueprint 23
+we have blueprint 25 => 1 geode
+we have blueprint 25 => 2 geode
+we have blueprint 19 => 1 geode
+we have blueprint 19 => 2 geode
+running blueprint 21
+running blueprint 26
+we have blueprint 16 => 2 geode
+we have blueprint 5 => 1 geode
+running blueprint 14
+running blueprint 15
+we have blueprint 5 => 2 geode
+we have blueprint 21 => 1 geode
+we have blueprint 21 => 2 geode
+running blueprint 20
+we have blueprint 20 => 1 geode
+running blueprint 13
+running blueprint 22
+we have blueprint 22 => 1 geode
+we have blueprint 1 => 3 geode
+we have blueprint 12 => 1 geode
+we have blueprint 18 => 2 geode
+we have blueprint 12 => 2 geode
+running program  27
+running program  28
+running program  29
+running program  30
+we have blueprint 17 => 4 geode
+we have blueprint 7 => 3 geode
+we have blueprint 24 => 3 geode
+we have blueprint 9 => 1 geode
+we have blueprint 9 => 2 geode
+we have blueprint 4 => 3 geode
+we have blueprint 15 => 1 geode
+we have blueprint 15 => 2 geode
+running blueprint 27
+we have blueprint 27 => 1 geode
+we have blueprint 23 => 1 geode
+we have blueprint 26 => 1 geode
+we have blueprint 14 => 1 geode
+we have blueprint 20 => 2 geode
+we have blueprint 27 => 2 geode
+we have blueprint 25 => 3 geode
+we have blueprint 25 => 4 geode
+we have blueprint 22 => 2 geode
+we have blueprint 13 => 1 geode
+we have blueprint 13 => 2 geode
+we have blueprint 10 => 3 geode
+we have blueprint 14 => 2 geode
+we have blueprint 26 => 2 geode
+we have blueprint 10 => 4 geode
+we have blueprint 11 => 3 geode
+we have blueprint 6 => 3 geode
+we have blueprint 11 => 4 geode
+we have blueprint 6 => 4 geode
+we have blueprint 1 => 4 geode
+we have blueprint 8 => 3 geode
+we have blueprint 8 => 4 geode
+we have blueprint 7 => 4 geode
+we have blueprint 5 => 3 geode
+we have blueprint 5 => 4 geode
+running blueprint 29
+we have blueprint 24 => 4 geode
+we have blueprint 21 => 3 geode
+we have blueprint 21 => 4 geode
+running blueprint 30
+we have blueprint 30 => 1 geode
+we have blueprint 4 => 4 geode
+we have blueprint 2 => 3 geode
+we have blueprint 2 => 4 geode
+we have blueprint 12 => 3 geode
+running blueprint 28
+we have blueprint 12 => 4 geode
+we have blueprint 28 => 1 geode
+we have blueprint 28 => 2 geode
+we have blueprint 3 => 3 geode
+we have blueprint 3 => 4 geode
+we have blueprint 23 => 2 geode
+we have blueprint 19 => 3 geode
+we have blueprint 19 => 4 geode
+we have blueprint 29 => 1 geode
+we have blueprint 29 => 2 geode
+we have blueprint 16 => 3 geode
+we have blueprint 16 => 4 geode
+we have blueprint 30 => 2 geode
+we have blueprint 15 => 3 geode
+we have blueprint 15 => 4 geode
+we have blueprint 18 => 3 geode
+we have blueprint 18 => 4 geode
+we have blueprint 9 => 3 geode
+we have blueprint 27 => 3 geode
+we have blueprint 13 => 3 geode
+we have blueprint 27 => 4 geode
+we have blueprint 13 => 4 geode
+we have blueprint 20 => 3 geode
+we have blueprint 9 => 4 geode
+we have blueprint 20 => 4 geode
+we have blueprint 22 => 3 geode
+we have blueprint 26 => 3 geode
+we have blueprint 29 => 3 geode
+we have blueprint 29 => 4 geode
+we have blueprint 22 => 4 geode
+we have blueprint 26 => 4 geode
+we have blueprint 14 => 3 geode
+we have blueprint 14 => 4 geode
+we have blueprint 30 => 3 geode
+we have blueprint 30 => 4 geode
+we have blueprint 23 => 3 geode
+we have blueprint 23 => 4 geode
+we have blueprint 28 => 3 geode
+we have blueprint 28 => 4 geode
+we have blueprint 5 => 6 geode
+we have blueprint 5 => 7 geode
+we have blueprint 5 => 8 geode
+we have blueprint 25 => 6 geode
+we have blueprint 15 => 6 geode
+we have blueprint 25 => 7 geode
+we have blueprint 25 => 8 geode
+we have blueprint 27 => 6 geode
+we have blueprint 15 => 7 geode
+we have blueprint 15 => 8 geode
+we have blueprint 20 => 6 geode
+we have blueprint 24 => 6 geode
+we have blueprint 17 => 6 geode
+we have blueprint 27 => 7 geode
+we have blueprint 27 => 8 geode
+we have blueprint 11 => 6 geode
+we have blueprint 20 => 7 geode
+we have blueprint 20 => 8 geode
+we have blueprint 17 => 7 geode
+we have blueprint 17 => 8 geode
+we have blueprint 24 => 7 geode
+we have blueprint 24 => 8 geode
+we have blueprint 11 => 7 geode
+we have blueprint 11 => 8 geode
+we have blueprint 10 => 6 geode
+we have blueprint 21 => 6 geode
+we have blueprint 10 => 7 geode
+we have blueprint 10 => 8 geode
+we have blueprint 21 => 7 geode
+we have blueprint 21 => 8 geode
+we have blueprint 29 => 6 geode
+we have blueprint 14 => 6 geode
+we have blueprint 22 => 6 geode
+we have blueprint 8 => 6 geode
+we have blueprint 14 => 7 geode
+we have blueprint 22 => 7 geode
+we have blueprint 29 => 7 geode
+we have blueprint 29 => 8 geode
+we have blueprint 14 => 8 geode
+we have blueprint 22 => 8 geode
+we have blueprint 8 => 7 geode
+we have blueprint 8 => 8 geode
+we have blueprint 19 => 6 geode
+we have blueprint 19 => 7 geode
+we have blueprint 19 => 8 geode
+we have blueprint 18 => 6 geode
+we have blueprint 18 => 7 geode
+we have blueprint 18 => 8 geode
+we have blueprint 2 => 6 geode
+we have blueprint 1 => 6 geode
+we have blueprint 30 => 6 geode
+we have blueprint 2 => 7 geode
+we have blueprint 2 => 8 geode
+we have blueprint 7 => 6 geode
+we have blueprint 1 => 7 geode
+we have blueprint 1 => 8 geode
+we have blueprint 7 => 7 geode
+we have blueprint 7 => 8 geode
+we have blueprint 30 => 7 geode
+we have blueprint 30 => 8 geode
+we have blueprint 28 => 6 geode
+we have blueprint 28 => 7 geode
+we have blueprint 28 => 8 geode
+we have blueprint 13 => 6 geode
+we have blueprint 23 => 6 geode
+we have blueprint 6 => 6 geode
+we have blueprint 13 => 7 geode
+we have blueprint 13 => 8 geode
+we have blueprint 6 => 7 geode
+we have blueprint 6 => 8 geode
+we have blueprint 12 => 6 geode
+we have blueprint 23 => 7 geode
+we have blueprint 23 => 8 geode
+we have blueprint 26 => 6 geode
+we have blueprint 9 => 6 geode
+we have blueprint 26 => 7 geode
+we have blueprint 26 => 8 geode
+we have blueprint 12 => 7 geode
+we have blueprint 12 => 8 geode
+we have blueprint 9 => 7 geode
+we have blueprint 9 => 8 geode
+we have blueprint 4 => 6 geode
+we have blueprint 3 => 6 geode
+we have blueprint 4 => 7 geode
+we have blueprint 4 => 8 geode
+we have blueprint 3 => 7 geode
+we have blueprint 3 => 8 geode
+we have blueprint 16 => 6 geode
+we have blueprint 16 => 7 geode
+we have blueprint 16 => 8 geode
+
+
+

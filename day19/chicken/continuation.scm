@@ -150,12 +150,18 @@ what want to happen here is a multiple parallel blueprint procedures executing
 continuation
 
 
-
-
 |#
 
-
+;; only 30 or so blueprints need to run
 (define continuations (make-vector 40))
+
+(define do-something-else
+  (lambda (i)
+    (when (> i 30) (set! i 1))
+    (let ((fn (vector-ref continuations i)))
+      ;; just going to call continuation with an arbitrary value we will never use
+      (fn #t))))
+     		 
 
 ;; see if we can run this generic routine for one particular blueprint
 ;; like to run all blueprints in parallel if at all possible 
@@ -166,7 +172,7 @@ continuation
 			  cost-obs-ore cost-obs-clay
 			  cost-geo-ore cost-geo-obs)
   (define max-geo 0)
-  
+  (define iter 0)
   (define (blue1a robot-ore ore robot-clay clay robot-obs obs robot-geo geo step path)
     (cond
      ((< ore 0) #f)
@@ -176,43 +182,54 @@ continuation
      ((and (> geo 0) (> step 23))
       (when (> geo max-geo)
 	(set! max-geo geo)
-	(format #t "we have blueprint ~a => ~a geode~%" blueprint-no max-geo)
+	(format #t "we have ~a ~a geode~%" blueprint-no max-geo)
 	;;(format #t "~a~%" (reverse path))
-	))
+      ))
      ((> step 23) #f)
      (#t
+
+      ;; come through here say 100 times , until we reset counter and go do something else
+      (set! iter (+ iter 1))
+      (when (> iter 100)
+	(set! iter 0)
+	;; insert break and return here when continuation is re-invoked
+	(call/cc (lambda (k)
+		   (vector-set! continuations blueprint-no k)
+		   (do-something-else (+ 1 blueprint-no)))))
+      ;; when k is re-invoked we come back here
+      
       ;; feedback
-      ;;(format #t "step ~a : ore:(~a ~a) clay:(~a ~a) obs:(~a ~a) geo:(~a ~a)~%" step robot-ore ore robot-clay clay robot-obs obs robot-geo geo)    
+      ;;(format #t "blueprint ~a : step ~a : ore:(~a ~a) clay:(~a ~a) obs:(~a ~a) geo:(~a ~a)~%" blueprint-no step robot-ore ore robot-clay clay robot-obs obs robot-geo geo)    
       (blue1b 0 0 0 0 robot-ore ore robot-clay clay robot-obs obs robot-geo geo step path))))
 
   (define (blue1b ro rc rob rg robot-ore ore robot-clay clay robot-obs obs robot-geo geo step path)
     
-    ;; buy a geode
-    (when (and (>= ore 2)(>= obs 7))
+    ;; buy a geode for cost-geo-ore ore and cost-geo-obs obs
+    (when (and (>= ore cost-geo-ore)(>= obs cost-geo-obs))
       (blue1b ro rc rob (+ 1 rg)
-	      robot-ore  (- ore 2)
+	      robot-ore  (- ore cost-geo-ore)
 	      robot-clay clay
-	      robot-obs  (- obs 7)
+	      robot-obs  (- obs cost-geo-obs)
 	      robot-geo  geo
 	      step
 	      (cons 'buy-geode path)
 	      ))
     
-    ;; buy an obsidian
-    (when (and (>= ore 3)(>= clay 14))
+    ;; buy an obsidian for cost-obs-ore ore and cost-obs-clay clay
+    (when (and (>= ore cost-obs-ore)(>= clay cost-obs-clay))
       (blue1b ro rc (+ 1 rob) rg
-	      robot-ore  (- ore 3)
-	      robot-clay (- clay 14)
+	      robot-ore  (- ore cost-obs-ore)
+	      robot-clay (- clay cost-obs-clay)
 	      robot-obs  obs
 	      robot-geo  geo
 	      step
 	      (cons 'buy-obsidian path)
 	      ))
 
-    ;; buy a clay robot for 2 ore
-    (when (>= ore 2) 
+    ;; buy a clay robot for cost-clay ore
+    (when (>= ore cost-clay) 
       (blue1b ro (+ 1 rc) rob rg
-	      robot-ore (- ore 2)
+	      robot-ore (- ore cost-clay)
 	      robot-clay clay
 	      robot-obs  obs
 	      robot-geo geo
@@ -220,11 +237,11 @@ continuation
 	      (cons 'buy-clay path)
 	      ))
 
-    ;; buy an ore robot for 4 ore
-    (when (>= ore 4)
+    ;; buy an ore robot for cost-ore ore
+    (when (>= ore cost-ore)
       (blue1b
        (+ ro 1) rc rob rg
-       robot-ore (- ore 4)
+       robot-ore (- ore cost-ore)
        robot-clay clay
        robot-obs  obs
        robot-geo geo
@@ -262,24 +279,15 @@ continuation
        path
        )))
 
+  ;; give continuations a default procedure to call with an arbitrary value 
   (vector-set! continuations blueprint-no (lambda (v) (blue1-run)))
   (list blueprint-str blue1-run))
 
 
 (define funcs (map (lambda (x) (apply make-blue-search x)) input-values))
 
-;; here continuations should be fully defined
-
-(define (run)
-  (let ((v (car (command-line-arguments))))
-    (cond
-     ((string? v) (set! v (string->number v))))
-    (when (integer? v)
-      (format #t "running blueprint ~a~%" v)
-      (let ((fn (vector-ref continuations v)))
-	(fn 'go)))))
-
-(run)
+;; this should run the procedures in parallel well on one cpu
+(do-something-else 1)
 
 
 
@@ -313,3 +321,36 @@ continuation
 ;;(filter (lambda (x) (not (= (length x) 8))) input-values)
 |#		   
 		  
+#|
+
+trying to do 30 procedures at once gives us 
+
+we have 1 3 geode
+we have 3 8 geode
+we have 6 1 geode
+we have 7 1 geode
+we have 9 9 geode
+we have 10 1 geode
+we have 13 6 geode
+we have 14 1 geode
+we have 15 1 geode
+we have 16 5 geode
+we have 17 4 geode
+we have 19 4 geode
+we have 25 1 geode
+we have 27 1 geode
+we have 28 1 geode
+we have 30 3 geode
+we have 23 1 geode
+we have 23 3 geode
+we have 26 2 geode
+we have 9 10 geode
+we have 9 13 geode
+we have 28 2 geode
+we have 23 4 geode
+we have 23 8 geode
+we have 30 5 geode
+... just kind of stalls with no progress visible ...
+
+
+|#
