@@ -117,8 +117,6 @@ delay buying ... until never ... never bought anything ... cannot make geodes
     (blue1b 0 0 0 0 robot-ore ore robot-clay clay robot-obs obs robot-geo geo step path))))
 
 
-
-
 (define (blue1b ro rc rob rg robot-ore ore robot-clay clay robot-obs obs robot-geo geo step path)
   
   ;; buy a geode
@@ -297,4 +295,4 @@ delay buying ... until never ... never bought anything ... cannot make geodes
   (replay '(next next buy-clay next next buy-clay next next buy-clay next next buy-clay next next next buy-obsidian next next next buy-obsidian next next next buy-geode next next buy-obsidian next next buy-geode next next buy-geode next next)))
 
 
-(blue1-run)
+;;(blue1-run)
