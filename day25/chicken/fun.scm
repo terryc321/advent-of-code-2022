@@ -106,9 +106,12 @@ expect2 = [ 1747 , 906 ,198 , 11,201, 31,1257,32, 353,107, 7, 3, 37]
 	 ((or (not best-diff) (< diff best-diff))
 	  (set! best-diff diff)
 	  (set! best-str str)
-	  (format #t "best-str ~a ~a ~%" best-str best-diff)))	
+	  (format #t "best-str ~a ~a ~%" best-str best-diff)
+	  (optimize str)
+	  ))	
 	(hunter lim)))
     (hunter lim)))
+
 
 #|
 #;949> (hunt 20)
@@ -126,10 +129,60 @@ best-str 2-=102--1=2=1111--11 15474644
 best-str 2-=102--0010201=1--= 14933244 
 best-str 2-=102--020=-==001-0 1589808 
 best-str 2-=102--02-2111=0=02 1410365 
-
 |#
 
 
+;; optimize snafu string str
+(define (optimize str)
+  (define best-diff #f)
+  (define best-str #f)
+  (define (vector->string v)
+    (list->string (vector->list v)))
+  (define (helper)
+    ;; record best-diff
+    (set! best-str str)
+    (set! best-diff (abs (- guess (snafu str))))
+    (let ((len (string-length str))
+	  (vec (list->vector (string->list str))))
+      (let loop ((i 0))
+	;;try = replace each character as we go if we get a better version use that
+	;; and keep
+	(let ((ch* (vector-ref vec i)))
+	  ;;(format #t "optimizing for index ~a ~% "i )
+	  
+	(map (lambda (ch)
+	       (vector-set! vec i ch)
+	       (let* ((str2 (vector->string vec))
+		      (val (snafu str2))
+		      (diff (abs (- guess val))))
+		 (when (or (not best-diff) (< diff best-diff))		   
+		   (set! best-diff diff)
+		   (set! best-str str2)
+		   ;;(format #t "best-str ~a ~a~%" best-str best-diff)
+		   (set! str str2)
+		   (set! vec (list->vector (string->list str)))
+		   )))
+	     '(#\= #\- #\0 #\1 #\2))
+	
+	(when (< i (- len 1))
+	  (loop (+ i 1)))))))
+
+  (helper)
+  (list best-str best-diff))
+
+
+
+(define (test)
+  (optimize "2-=102--02-2111=0=02"))
+
+(define (sanity)
+  (optimize  "22222222222222222222"))
+
+;; "2-=102--02-2111=0=02"
+
+(define (sanity2)
+  (optimize  "2222222222222222222"))
+      
 
 
 
