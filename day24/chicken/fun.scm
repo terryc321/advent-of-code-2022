@@ -11,6 +11,12 @@
 (import (chicken base)) ;; assert
 (import (chicken random))
 
+;; generalized-arrays does not yet compile - chicken 5 - 
+(import srfi-179)
+
+;;(import arrays)
+
+
 ;; if get expansion errors not defined at compile time
 ;; (import-for-syntax (only bindings bind))
 ;; we can import bind functionality from bindings egg , then use bind in our macro
@@ -46,5 +52,37 @@
    "#####.#"))
 
 ;; what do when scheme working on does not support the feature want ? like 2d arrays
+
+#|
+;; array (1 1) to (11 11) inclusive , if i = j then put 1 else 
+(define a (make-array (make-interval #(1 1) #(11 11))
+		      (lambda (i j)
+                        (if (= i j)
+                            (list i j 1)
+                            (list i j 0)))))
+
+(define a_ (array-getter a))
+
+(a_ 3 3) ;; => 1
+(a_ 2 3) ;; => 0
+(a_ 11 0) ;; => is an error ... (a_ 11 0)  (11 0 0)
+
+
+(define b (make-array (make-interval #(1 1) #(11 11))
+		      (lambda (i j)
+                        (if (= i j)
+                            (list i j 1)
+                            (list i j 0)))
+		      (array-setter array)))
+
+(define a_ (array-getter a))
+
+(a_ 3 3) ;; => 1
+(a_ 2 3) ;; => 0
+(a_ 11 0) ;; => is an error ... (a_ 11 0)  (11 0 0)
+
+|#
+
+
 
 
