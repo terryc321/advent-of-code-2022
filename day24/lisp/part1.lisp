@@ -2,16 +2,8 @@
 #|
 advent of code 2022 day 24 blizzard
 
-if blizzard at x,y pointing east > and playfield size is width , height at time step 0
-what will be its position at time step N
-
-similarly for other three directions < ^ v
-
-then if we know where all blizzards are at all times , we know where the empty spaces will be
-we can then plot out , maybe breadth first approach , find shortest path
-
-
 |#
+(declaim (optimize (debug 3) (space 0) (speed 0)))
 
 
 (sb-ext:restrict-compiler-policy 'debug 3 3)
@@ -21,50 +13,6 @@ we can then plot out , maybe breadth first approach , find shortest path
   (:use :cl))
 (in-package :foo)
 
-#|
-;; flatten it ? ( "#.######.....##>....##.....##...v.##.....######.#"
-
-#.#####
-#.....#
-#>....#
-#.....#
-#...v.#
-#.....#
-#####.#
-
-5x5 grid
-top opening and bottom opening
-(defparameter arr (make-array '(2 3)))
-
-can the wind ever escape out the opening ?
-top opening is (1,0)
-top left is (1,1)
-bottom right is (5,5)
-bottom opening is (5,6)
-
-wind at (x=1,y=2,direction= +X)
-wind at (x=4,y=4,direction= +Y)
-
-wind > can travel right x=5 ok , when x > 5 replaced with new one at x = 1 still facing right
-similarly 
-wind v can travel down to y=5 ok , any more gets replaced with x=4 , y = 1, direction v down
-
-grid dimensions 5 5
-wind position ( x , y )
-wind directions < > ^ v
-
-state of game
- wid hgt  explorer-x explorer-y  wind1-x wind1-y dir    wind2-x wind2-y dir
-            wind1 implicit direction east
-            wind2 implicit direction south
-
-|#
-
-
-
-;; put as a function (put "~%") did not produce a newline like expected
-;; so made a macro , not sure its shorter than (terpri) common lisps version of newline
-;;(defun put (s) (format t "~a" s))
 (defmacro put (s)  
   `(cond
      ((symbolp ,s) (format t "~a" ,s))
@@ -103,7 +51,7 @@ state of game
 (defun test ()
   (show `((5 5)(1 0)(1 2 >)(4 4 v))))
 
-(defun advance-wind (wid hgt winds)
+(defun advance-wind (wid hgt winds fn)
   (let ((winds2 (mapcar (lambda (x)
 			  (destructuring-bind (wx wy wdir) x
 			    (cond
@@ -120,6 +68,7 @@ state of game
 			       (setq wy (- wy 1))
 			       (if (< wy 1) (setq wy hgt)))
 			      (t (error "bad dir")))
+			    (funcall fn wx wy)
 			    (list wx wy wdir)))
 			winds)))
     winds2))
@@ -195,7 +144,6 @@ task : read a file and turn grid into something more usable
 (defparameter *example2* (parse "example2.txt"))
 (defparameter *input* (parse "../input.txt"))
 
-#|
 
 #|
 solver explorer can move
@@ -239,17 +187,28 @@ breadth first search of state
 	(todo '())
 	(steps 0))
     ;;
-    (catch 'solved
+    (catch 'solved      
       (destructuring-bind (width height) (playfield-of state)
+	
 	(format t "playfield is ~a ~a in size ~%" width height)
+
 	;; assume explorer at position (1 , 0)
 	;; search state ((explorer-x explorer-y) ... winds ... )
 	;; initial working set is a single state = the start state
-	(setq working (list `((1 0) (winds-of state))))
+
+	(setq working (list `((1 0) ,@(winds-of state))))
+	
+	(format t "working = ~a ~%" working)
 	
 	(loop while (not (null working)) do
+	  
 	  (dolist (state working)
 
+	    ;; print playfield
+	    (show (cons `(,width ,height) state))
+
+	    (format t "~%~%")
+	  	  
 	    ;; some mechanism to abort adding next state of this to working set
 	    (catch 'blizzard
 	      (destructuring-bind (ex ey) (first state)
@@ -266,35 +225,68 @@ breadth first search of state
 
 		  ;; check all winds that no blizzard and explorer occupy same square
 		  (dolist (wind winds)
+		    (format t "debug . winds = ~a ~%" winds)
+		    (format t "debug . wind = ~a ~%" wind)
 		    (destructuring-bind (wx wy wdir) wind
 		      (when (and (= wx ex)(= wy ey))
 			(throw 'blizzard t))))
 		  
 		  ;; explorer go right and advance winds together
 		  ;; go right
-		  (let ((ex2 (+ ex 1))(ey2 ey)) (setq todo (cons `((,ex2 ,ey2) ,@(advance-wind width height winds)) todo)))
-		  
-		  ;; go left
-		  (let ((ex2 (- ex 1))(ey2 ey)) (setq todo (cons `((,ex2 ,ey2) ,@(advance-wind width height winds)) todo)))
+		  ;; explorer cannot go up left right when in starting square
+		    
+		  (let ((ex2 (+ ex 1))(ey2 ey))
+		    
+		      (setq todo (cons `((,ex2 ,ey2) ,@(advance-wind width height winds
+								     (lambda (x y)
+								       (when (and (= x ex2)(= y ey2))
+									 (throw 'blizzard t)))))
+				       todo)))
+		    
+		    ;; go left
+		    (let ((ex2 (- ex 1))(ey2 ey))
+		      (setq todo (cons `((,ex2 ,ey2) ,@(advance-wind width height winds
+								     (lambda (x y)
+								       (when (and (= x ex2)(= y ey2))
+									 (throw 'blizzard t)))))
+				       todo)))
 
-		  ;; go up
-		  (let ((ex2 ex)(ey2 (- ey 1))) (setq todo (cons `((,ex2 ,ey2) ,@(advance-wind width height winds)) todo)))
-
+		    ;; go up
+		    (let ((ex2 ex)(ey2 (- ey 1)))
+		      (setq todo (cons `((,ex2 ,ey2) ,@(advance-wind width height winds
+								     (lambda (x y)
+								       (when (and (= x ex2)(= y ey2))
+									 (throw 'blizzard t)))))
+				       todo))))
+		  );; starting-gate guards
+		
 		  ;; go down
-		  (let ((ex2 ex)(ey2 (+ ey 1))) (setq todo (cons `((,ex2 ,ey2) ,@(advance-wind width height winds)) todo)))
-
+		  (let ((ex2 ex)(ey2 (+ ey 1)))
+		    (setq todo (cons `((,ex2 ,ey2) ,@(advance-wind width height winds
+								   (lambda (x y)
+								     (when (and (= x ex2)(= y ey2))
+								       (throw 'blizzard t)))))
+				     todo)))
 		  ;; wait
-		  (let ((ex2 ex)(ey2 ey)) (setq todo (cons `((,ex2 ,ey2) ,@(advance-wind width height winds)) todo)))
+		  (let ((ex2 ex)(ey2 ey))
+		    (setq todo (cons `((,ex2 ,ey2) ,@(advance-wind width height winds
+								   (lambda (x y)
+								     (when (and (= x ex2)(= y ey2))
+								       (throw 'blizzard t)))))
+				     todo)))
 
 		  ))))
 	  ;; flip working and nullify todo
 	  (setq working todo)
 	  (setq todo nil)
 	  (setq steps (+ steps 1))
-	      )))))
+	  )))
 
 
-|#
+
+
+
+
 
 
 

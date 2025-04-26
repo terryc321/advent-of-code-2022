@@ -1,0 +1,20 @@
+
+given wind locations and directions
+
+initially explorer at position (x=1,y=0)
+explorer trying to get to (x=width,y=height+1)
+playfield is width , height in size
+
+we can compute next step
+
+(define *input*
+  '((120 25) (1 0) (120 25 >) (119 25 v) (118 25 v) (117 25 >) (116 25 ^) ....
+
+from input 120 across by 25 down excluding walls and entry exit points
+
+so according to this there is a wind facing right at the bottom right hand corner
+of the playfield
+
+
+
+
