@@ -8,9 +8,11 @@ advent of code 2022 day 24 blizzard
 (import (only (chicken pretty-print) pp))
 (import (only (chicken format) format))
 (import (only bindings bind))
-(import (only srfi-1 first second))
+(import (only srfi-1 first second filter))
 (import (only (chicken process-context) current-directory change-directory))
+(import procedural-macros)
 
+;; (define-macro (swap a b)  (with-implicit-renaming (c? 
 
 ;; FORMAT 
 ;; (width height) (explorer-x explorer-y) (wind-x wind-y wind-dir) ... other winds ...
@@ -393,6 +395,11 @@ advent of code 2022 day 24 blizzard
     (15 1 >) (14 1 >) (13 1 <) (12 1 ^) (11 1 <) (10 1 >) (9 1 <) (8 1 ^) (7 1 v)
     (6 1 >) (5 1 ^) (3 1 ^) (2 1 <) (1 1 >)))
 
+;; suppose at ex,ey represent explorer x y position 
+;; we can compute next position of each wind 
+;; only interested in (ex,ey) (ex+1,ey) (ex-1,ey) (ex,ey-1) (ex,ey+1)
+
+
 
 
 (define (search puzzle)
@@ -425,11 +432,47 @@ advent of code 2022 day 24 blizzard
 			   (when (> y2 height)
 			     (set! y2 1)) 
 			   (list x2 y2 'v))))
-		 
-
-				    
-	(let ((winds (cdr (cdr puzzle))))
-	  (car winds))))
+		 (recur (lambda (working todo winds step)
+			  (cond
+			   ((null? working) (cond ((null? todo) #f)
+						  (#t (let* ((new-winds (map next-wind winds))
+							     (new-todo (filter (lambda (pos)
+										 (bind (ex ey) pos
+										       (let loop ((xs new-winds))
+											 (cond
+											  ((null? xs) #t)
+											  (#t (let ((wind (car xs)))
+												(bind (wx wy wdir) wind
+												      (cond
+												       ((and (= wx ex) (= wy ey))
+													#f)
+												       (#t (loop (cdr xs)))))))))))
+									       todo)))
+							(format #t "advancing to step ~a ~%" (+ step 1))
+							(recur new-todo '() new-winds (+ step 1))))))
+			   (#t (let ((state (car working)))
+				 (bind (ex ey) state
+				       ;; am i inside board - well , if at - 8 surfaces could be at top left corner only move right down
+				       (cond
+					((and (= ex 1) (= ey 0))
+					 (recur (cdr working) (cons (move-down ex ey) todo) winds))
+					
+					((and (>= ex 1)(>= ey 1)(<= ex width)(<= ey height))
+					 (recur (cdr working)
+						(append (list (move-up ex ey)
+							      (move-left ex ey)
+							      (move-right ex ey)
+							      (move-down ex ey)) todo)
+						winds
+						step)))))))))
+		 );;letrec
+	  (let ((winds (cdr (cdr puzzle)))
+		(ex 1)
+		(ey 0)
+		(working '())
+		(todo '())
+		(step 0))
+	    (recur working todo winds step)))))
 
 
 
