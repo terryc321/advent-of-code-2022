@@ -183,5 +183,6 @@ task : read a file and turn grid into something more usable
 
 (defparameter *example1* (parse "example1.txt"))
 (defparameter *example2* (parse "example2.txt"))
+(defparameter *input* (parse "../input.txt"))
 
 
