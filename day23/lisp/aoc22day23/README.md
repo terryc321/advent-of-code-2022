@@ -1,11 +1,19 @@
 # aoc22day23
-### _Your Name <your.name@example.com>_
 
-This is a project to do ... something.
+- [X] Open file for reading
+- [X] Read line by line
+- [X] Verify input output
+- [X] Elf structures position x y proposed x y
+- [X] Oriented north +Y east +X
+- [ ] Simple solution first
 
-## License
+## Simple solution first
 
-Specify license here
+get working code even if it is very slow
+
+## Orientation
+
+chosen +Y as North and +X as East so more like a math axis applied to a 2d map
 
 ## Verify input output
 
