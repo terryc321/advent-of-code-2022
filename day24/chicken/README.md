@@ -26,6 +26,17 @@ either way , sufficiently more complex than a simple fibonacci call
 
 # keyword arguments 
 
+we can call in-play with 3 arguments position width height in any order
+
+big advantage it constrains data feeding into procedure to be in the correct channel
+
+```lisp
+(in-play :position '(503 231) :width 5 :height 5)
+(in-play :width 5 :position '(503 231) :height 5)
+(in-play :width 5 :height 5 :position '(503 231))
+```
+
+```lisp
 (defun in-play(&key position width height)
   (destructuring-bind (x y) position
     (cond
@@ -36,12 +47,7 @@ either way , sufficiently more complex than a simple fibonacci call
       ((<= y 0) nil)
       ((>= y (+ height 1)) nil)
       (t t))))
-
-we can call in-play with 3 arguments position width height in any order
-
-(in-play :position '(503 231) :width 5 :height 5)
-(in-play :width 5 :position '(503 231) :height 5)
-(in-play :width 5 :height 5 :position '(503 231))
+```
 
 # multiline comments 
 
