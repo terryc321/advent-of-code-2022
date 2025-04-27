@@ -527,15 +527,142 @@ be aware of side effects
     result))
 
 
-(let ((positions '((1 0)(2 3)(4 5)))
+;; removes positions (4 4) and (1 2) that are located in blizzards
+(let ((positions '((1 0)(2 3)(4 4)(1 2)(4 5)))
       (winds (cdr (cdr *example1*))))
-  (avoid-blizzards :positions positions :winds winds))
-;;=> ((4 5) (2 3) (1 0))
+  (assert (equalp (avoid-blizzards :positions positions :winds winds)
+		  `((4 5) (2 3) (1 0)))))
 
-;; remove duplicate positions 
-;; we could of combined all procedures together , but make them more complex
-;; initial correctness and testing we split them and make them as simple as possible
 
+
+(defun avoid-duplicate-positions (&key positions width height)
+  (let ((grid (make-array (list (+ width 4) (+ height 4)) :initial-element nil))
+	(result nil))
+       (loop for pos in positions do 
+         (destructuring-bind (x y) pos
+	   (when (in-play :position pos :width width :height height)
+	     (let ((ge (aref grid x y)))
+	       (cond
+		 (ge nil)
+		 (t (setf (aref grid x y) t)
+		    (setq result (cons pos result))))))))
+    result))
+
+
+;; removes duplicate positions and also positions that are not valid in-play positions
+(let ((positions '((-2 1)(1 0)(2 3)(4 5)(2 3)(-3 9)(4 4)(4 4)(1 0)(1 2)(4 5)(4 5)(0 -1)))
+      (width 5)
+      (height 5))
+  (assert (equalp
+	   (avoid-duplicate-positions :positions positions :width width :height height)
+	   `((1 2) (4 4) (4 5) (2 3) (1 0)))))
+
+
+;; next wind for any given wind
+(defun next-wind (&key wind width height)
+  (destructuring-bind (wx wy wdir) wind
+    (cond
+      ((eq wdir '^) (next-wind-up :wind wind :width width :height height))
+      ((or (eq wdir 'v)
+	   (eq wdir 'V))
+       (next-wind-down :wind wind :width width :height height))
+      ((eq wdir '<) (next-wind-left :wind wind :width width :height height))
+      ((eq wdir '>) (next-wind-right :wind wind :width width :height height))
+      (t (error "bad dir" wdir)))))
+
+(defun next-wind-right (&key wind width height)
+  (destructuring-bind (wx wy wdir) wind
+    (let ((wx (+ wx 1)))
+      (cond
+	((> wx width) (list 1 wy '>))
+	(t (list wx wy '>))))))
+
+(defun next-wind-left (&key wind width height)
+  (destructuring-bind (wx wy wdir) wind
+    (let ((wx (- wx 1)))
+      (cond
+	((< wx 1) (list width wy '<))
+	(t (list wx wy '<))))))
+
+
+(defun next-wind-up (&key wind width height)
+  (destructuring-bind (wx wy wdir) wind
+    (let ((wy (- wy 1)))
+      (cond
+	((< wy 1) (list wx height '^))
+	(t (list wx wy '^))))))
+
+(defun next-wind-down (&key wind width height)
+  (destructuring-bind (wx wy wdir) wind
+    (let ((wy (+ wy 1)))
+      (cond
+	((> wy height) (list wx 1 'v))
+	(t (list wx wy 'v))))))
+
+
+;; wind right
+(let ((width 5)(height 5)(x 1)(y 1))
+  (loop for x from 1 to width do
+    (let* ((wind (list x y '>))
+	   (wind2 (next-wind :wind wind :width width :height height)))
+      (cond
+	((= x width) (assert (equalp wind2 (list 1 y '>))))
+	(t (assert (equalp wind2 (list (+ x 1) y '>))))
+	))))
+
+
+;; wind left
+(let ((width 5)(height 5)(x 1)(y 1))
+  (loop for x from 1 to width do
+    (let* ((wind (list x y '<))
+	   (wind2 (next-wind :wind wind :width width :height height)))
+      (cond
+	((= x 1) (assert (equalp wind2 (list width y '<))))
+	(t (assert (equalp wind2 (list (- x 1) y '<))))
+	))))
+
+
+;; wind up
+(let ((width 5)(height 5)(x 1)(y 1))
+  (loop for y from 1 to height do
+    (let* ((wind (list x y '^))
+	   (wind2 (next-wind :wind wind :width width :height height)))
+      (cond
+	((= y 1) (assert (equalp wind2 (list x height '^))))
+	(t (assert (equalp wind2 (list x (- y 1) '^))))
+	))))
+
+
+;; find next wind for each wind and ensure each wind is also in playfield
+(defun all-next-winds(&key winds width height)
+  (let ((result (mapcar (lambda (w) (next-wind :wind w :width width :height height))
+			winds)))
+    (loop for wind in result do
+      (destructuring-bind (wx wy wdir) wind
+	(assert (eq t (in-play :position (list wx wy) :width width :height height)))))
+    result))
+
+
+(let* ((input *example2*)
+       (winds (cdr (cdr input)))
+       (width (car (car input)))
+       (height (car (cdr (car input)))))
+  (assert (equalp (all-next-winds :winds winds :width width :height height)
+		  '((1 4 >) (5 3 ^) (4 3 ^) (3 1 V) (2 3 ^) (6 4 <) (1 3 >) (4 3 <) (5 3 >)
+		    (2 4 V) (2 3 >) (5 2 <) (4 2 <) (1 2 <) (5 1 <) (5 4 ^) (3 1 <) (3 1 >)
+		    (2 1 >)))))
+
+
+
+
+
+  
+
+
+
+      
+      
+      
 
 
 

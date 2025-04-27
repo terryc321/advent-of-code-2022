@@ -107,3 +107,66 @@ here is a corrected version
 ;;=> ((4 5) (2 3) (1 0))
 
 ```
+
+# use previously tested code
+
+```lisp
+(defun avoid-duplicate-positions-bad (&key positions width height)
+  (let ((grid (make-array (list (+ width 4) (+ height 4)) :initial-element nil))
+	(result nil))
+       (loop for pos in positions do 
+         (destructuring-bind (x y) pos
+		 ;; ***
+	   (when (and (>= x 0)(>= y 0)(<= x (+ width 1))(<= y (+ height 1))) ;; in grid
+	     (let ((ge (aref grid x2 y2)))
+		 ;; ***
+```
+
+we can replace the array grid check with in-play that means a position in addition 
+to be being inside the grid area , it is also not buried in the wall
+whereas array check that could be true
+
+```lisp
+        ;; ***
+       (when (in-play :position pos :width width :height height)
+	     (let ((ge (aref grid x2 y2)))
+		 ;; ***
+```
+
+# hidden crevace
+
+```lisp
+(let ((width 5)(height)(x 1)(y 1))
+  (loop for y from 1 to height do
+    (let* ((wind (list x y '^))
+	   (wind2 (next-wind :wind wind :width width :height height)))
+      (cond
+	((= y 1) (assert (equalp wind2 (list x height '^))))
+	(t (assert (equalp wind2 (list x (- y 1) '^))))
+	))))
+
+```
+
+complaining that height is nil and not a real 
+
+this is a fancy way of saying that height variable is not initialised properly
+
+in a tighter language , we do not allow a default hidden assignment - must be explicit
+
+# avoid the unexpected
+
+avoid functionality not explicitly asked for and/or leads to weird stuff
+
+default capitalisation on reader in common lisp leads to some weird stuff
+
+```lisp
+(equal '(1 2 V) (list 1 2 'v))
+T
+```
+
+leads to some strange behaviour such as left < or right > or up ^ not having a capitalised form , but down vee v does 
+
+this is unexpected , avoid the unexpected
+
+
+
