@@ -584,7 +584,6 @@ be aware of side effects
 	((< wx 1) (list width wy '<))
 	(t (list wx wy '<))))))
 
-
 (defun next-wind-up (&key wind width height)
   (destructuring-bind (wx wy wdir) wind
     (let ((wy (- wy 1)))
@@ -598,7 +597,6 @@ be aware of side effects
       (cond
 	((> wy height) (list wx 1 'v))
 	(t (list wx wy 'v))))))
-
 
 ;; wind right
 (let ((width 5)(height 5)(x 1)(y 1))
@@ -654,128 +652,422 @@ be aware of side effects
 
 
 
+#|
+ given a player is at position (ex ey) he/she can go up down left or right
+|# 
+(defun all-directions (&key position width height)
+    (destructuring-bind (x y) position
+      (let ((result (list (list x y)
+			  (list (+ x 1) y)
+			  (list (- x 1) y)
+			  (list x (- y 1))
+			  (list x (+ y 1)))))
+	result)))
 
 
-  
+;; check any positions gets all directions 
+(let ((width 5)(height 5))
+  (equalp (all-directions :position (list 1 0) :width width :height height)
+	  '((1 0) (2 0) (0 0) (1 -1) (1 1))))
 
 
 
-      
-      
-      
+
+(defun all-directions-safe (&key position width height)
+  (remove-if (lambda (v) (not (in-play :position v :width width :height height)))
+	     (all-directions :position position :width width :height height)))
+
+
+(assert (equalp 
+	 (let ((width 5)(height 5))
+	   (all-directions-safe :position (list 1 0) :width width :height height))
+	 '((1 0) (1 1))))
+
+(assert (equalp 
+	 (let ((width 5)(height 5))
+	   (all-directions-safe :position (list width (+ height 1))
+				:width width :height height))
+	 '((5 6) (5 5))))
+
+(assert (equalp 
+	 (let ((width 5)(height 5))
+	   (all-directions-safe :position (list 3 3)
+				:width width :height height))
+	 '((3 3) (4 3) (2 3) (3 2) (3 4))))
 
 
 
 #|
+F : given a list of positions and winds
+
+eliminate any positions not in playfield
+eliminate any positions that are in blizzards
+
+find all new positions and new winds
+ recurse to F 
+|#
+
+
+(defun work (input)
+  (let ((winds (cdr (cdr input)))
+	(width (car (car input)))
+	(height (car (cdr (car input))))
+	(working (list (list 1 0)))
+	(todo '())
+	(step 0))
+    (catch 'solved
+      ;; loop
+      (loop while (not (null working)) do
+	(incf step)
+	(format t "working step ~a : ~%" step)
+	
+	(loop for pos in working do
+	  (let ((new-pos (all-directions-safe :position pos :width width :height height)))
+	    (setq todo (append new-pos todo))))
+
+	;; remove duplicate positions
+	(setq todo (avoid-duplicate-positions :positions todo :width width :height height))
+
+	;; compute next winds
+	(setq winds (all-next-winds :winds winds :width width :height height))
+
+	;; remove any in todo that are in next winds
+	(setq todo (avoid-blizzards :positions todo :winds winds))
+	
+	;; have we solved it yet 
+	(when (member (list width (+ height 1)) todo :test #'equalp)
+	  (format t "solved in ~a steps ~%" step)
+	  (throw 'solved t))
+
+	;; not solved it yet	
+	(setq working todo)
+	(setq todo nil)))))
+
+
+
+(defun part1 ()
+  (work *input*))
+
+
+#|
+FOO> (part1)
+working step 1 : 
+working step 2 : 
+working step 3 : 
+working step 4 : 
+working step 5 : 
+working step 6 : 
+working step 7 : 
+working step 8 : 
+working step 9 : 
+working step 10 : 
+working step 11 : 
+working step 12 : 
+working step 13 : 
+working step 14 : 
+working step 15 : 
+working step 16 : 
+working step 17 : 
+working step 18 : 
+working step 19 : 
+working step 20 : 
+working step 21 : 
+working step 22 : 
+working step 23 : 
+working step 24 : 
+working step 25 : 
+working step 26 : 
+working step 27 : 
+working step 28 : 
+working step 29 : 
+working step 30 : 
+working step 31 : 
+working step 32 : 
+working step 33 : 
+working step 34 : 
+working step 35 : 
+working step 36 : 
+working step 37 : 
+working step 38 : 
+working step 39 : 
+working step 40 : 
+working step 41 : 
+working step 42 : 
+working step 43 : 
+working step 44 : 
+working step 45 : 
+working step 46 : 
+working step 47 : 
+working step 48 : 
+working step 49 : 
+working step 50 : 
+working step 51 : 
+working step 52 : 
+working step 53 : 
+working step 54 : 
+working step 55 : 
+working step 56 : 
+working step 57 : 
+working step 58 : 
+working step 59 : 
+working step 60 : 
+working step 61 : 
+working step 62 : 
+working step 63 : 
+working step 64 : 
+working step 65 : 
+working step 66 : 
+working step 67 : 
+working step 68 : 
+working step 69 : 
+working step 70 : 
+working step 71 : 
+working step 72 : 
+working step 73 : 
+working step 74 : 
+working step 75 : 
+working step 76 : 
+working step 77 : 
+working step 78 : 
+working step 79 : 
+working step 80 : 
+working step 81 : 
+working step 82 : 
+working step 83 : 
+working step 84 : 
+working step 85 : 
+working step 86 : 
+working step 87 : 
+working step 88 : 
+working step 89 : 
+working step 90 : 
+working step 91 : 
+working step 92 : 
+working step 93 : 
+working step 94 : 
+working step 95 : 
+working step 96 : 
+working step 97 : 
+working step 98 : 
+working step 99 : 
+working step 100 : 
+working step 101 : 
+working step 102 : 
+working step 103 : 
+working step 104 : 
+working step 105 : 
+working step 106 : 
+working step 107 : 
+working step 108 : 
+working step 109 : 
+working step 110 : 
+working step 111 : 
+working step 112 : 
+working step 113 : 
+working step 114 : 
+working step 115 : 
+working step 116 : 
+working step 117 : 
+working step 118 : 
+working step 119 : 
+working step 120 : 
+working step 121 : 
+working step 122 : 
+working step 123 : 
+working step 124 : 
+working step 125 : 
+working step 126 : 
+working step 127 : 
+working step 128 : 
+working step 129 : 
+working step 130 : 
+working step 131 : 
+working step 132 : 
+working step 133 : 
+working step 134 : 
+working step 135 : 
+working step 136 : 
+working step 137 : 
+working step 138 : 
+working step 139 : 
+working step 140 : 
+working step 141 : 
+working step 142 : 
+working step 143 : 
+working step 144 : 
+working step 145 : 
+working step 146 : 
+working step 147 : 
+working step 148 : 
+working step 149 : 
+working step 150 : 
+working step 151 : 
+working step 152 : 
+working step 153 : 
+working step 154 : 
+working step 155 : 
+working step 156 : 
+working step 157 : 
+working step 158 : 
+working step 159 : 
+working step 160 : 
+working step 161 : 
+working step 162 : 
+working step 163 : 
+working step 164 : 
+working step 165 : 
+working step 166 : 
+working step 167 : 
+working step 168 : 
+working step 169 : 
+working step 170 : 
+working step 171 : 
+working step 172 : 
+working step 173 : 
+working step 174 : 
+working step 175 : 
+working step 176 : 
+working step 177 : 
+working step 178 : 
+working step 179 : 
+working step 180 : 
+working step 181 : 
+working step 182 : 
+working step 183 : 
+working step 184 : 
+working step 185 : 
+working step 186 : 
+working step 187 : 
+working step 188 : 
+working step 189 : 
+working step 190 : 
+working step 191 : 
+working step 192 : 
+working step 193 : 
+working step 194 : 
+working step 195 : 
+working step 196 : 
+working step 197 : 
+working step 198 : 
+working step 199 : 
+working step 200 : 
+working step 201 : 
+working step 202 : 
+working step 203 : 
+working step 204 : 
+working step 205 : 
+working step 206 : 
+working step 207 : 
+working step 208 : 
+working step 209 : 
+working step 210 : 
+working step 211 : 
+working step 212 : 
+working step 213 : 
+working step 214 : 
+working step 215 : 
+working step 216 : 
+working step 217 : 
+working step 218 : 
+working step 219 : 
+working step 220 : 
+working step 221 : 
+working step 222 : 
+working step 223 : 
+working step 224 : 
+working step 225 : 
+working step 226 : 
+working step 227 : 
+working step 228 : 
+working step 229 : 
+working step 230 : 
+working step 231 : 
+working step 232 : 
+working step 233 : 
+working step 234 : 
+working step 235 : 
+working step 236 : 
+working step 237 : 
+working step 238 : 
+working step 239 : 
+working step 240 : 
+working step 241 : 
+working step 242 : 
+working step 243 : 
+working step 244 : 
+working step 245 : 
+working step 246 : 
+working step 247 : 
+working step 248 : 
+working step 249 : 
+working step 250 : 
+working step 251 : 
+working step 252 : 
+working step 253 : 
+working step 254 : 
+working step 255 : 
+working step 256 : 
+working step 257 : 
+working step 258 : 
+working step 259 : 
+working step 260 : 
+working step 261 : 
+working step 262 : 
+working step 263 : 
+working step 264 : 
+working step 265 : 
+working step 266 : 
+working step 267 : 
+working step 268 : 
+working step 269 : 
+working step 270 : 
+working step 271 : 
+working step 272 : 
+working step 273 : 
+working step 274 : 
+working step 275 : 
+working step 276 : 
+working step 277 : 
+working step 278 : 
+working step 279 : 
+working step 280 : 
+working step 281 : 
+working step 282 : 
+working step 283 : 
+working step 284 : 
+working step 285 : 
+working step 286 : 
+working step 287 : 
+working step 288 : 
+working step 289 : 
+working step 290 : 
+working step 291 : 
+working step 292 : 
+working step 293 : 
+working step 294 : 
+working step 295 : 
+working step 296 : 
+working step 297 : 
+working step 298 : 
+working step 299 : 
+working step 300 : 
+working step 301 : 
+working step 302 : 
+working step 303 : 
+working step 304 : 
+working step 305 : 
+solved in 305 steps 
+T
+FOO>
+
+|#
+
+
     
-;; unit tests 
-
-;;(loop for x in '(1 2 3) do (format t "x= ~a~%" x))
-(defmacro %-no-bliz ()
-  `(progn
-     (loop for wind in winds do
-       (destructuring-bind (wx wy wdir) wind
-	 (setq p (filter p (lambda (pos)
-			     (destructuring-bind (x y) pos
-			       (not (and (= x wx)(= y wy)))))))))
-     p))
-
-
-;; p : positions -> in-play -> no-bliz -> in-play + no-bliz
-(defun proceed-temp2 (p winds width height)
-  (let* ((p (filter p (%-in-play)))
-	 (p2 (progn (%-no-bliz))))
-    p2))
-
-
-(defun proceed-test2 ()
-  (let* ((input *example1*)
-	 (winds (cdr (cdr input)))
-	 (width (car (car input)))
-	 (height (car (cdr (car input)))))
-    (proceed-temp2 '((502 303) (1 0)) winds width height)))
-
-#|
-for each position , have it move up down left right
-this generate a new list of positions we can go
-if we have a 2d grid width height and mark where we can go
-record this position if it is not already marked
-
-can go up down left right and also wait
-
-if want debuggable code need to be able to call code with everything it needs to
-compute the result
-- in general a lot of information
-- need some sort of hash map to pass to
-- or optional and default and named arguments
-either way , sufficiently more complex than a simple fibonacci call
-
-|#
-
-(defmacro %-all-directions ()
-  `(progn
-     (let ((grid (make-array (list (+ width 4) (+ height 4)) :initial-element nil))
-	   (new-positions nil))
-       (format t "created grid size ~a ~%" (array-dimensions grid))
-       (loop for p in p2 do ;; for each position in positions do			    
-        (destructuring-bind (x y) p
-	  (format t "looking at positon ~a <= ~a ~a~% " p x y)
-	 (let ((x2 x)(y2 (- y 1))) ;; GO UP 
-	   (when (and (>= x 0)(>= y 0)(<= x (+ width 1))(<= y (+ height 1))) ;; in grid
-	     (let ((ge (aref grid x2 y2)))
-	       (when (not ge) (setf (aref grid x2 y2) t)
-		     (setq new-positions (cons (list x2 y2) new-positions))))))
-
-	  
-	 ;; (let ((x2 x)(y2 (+ y 1))) ;; GO DOWN 
-	 ;;   (when (and (>= x2 0)(>= y2 0)(<= x2 (+ width 1))(<= y2 (+ height 1))) ;; in grid
-	 ;;     (let ((ge (aref grid x2 y2)))
-	 ;;       (when (not ge) (setf (aref grid x2 y2) t)
-	 ;; 	     (setq new-positions (cons (list x2 y2) new-positions))))))
-	 ;; (let ((x2 (- x 1))(y2 y)) ;; GO LEFT
-	 ;;   (when (and (>= x2 0)(>= y2 0)(<= x2 (+ width 1))(<= y2 (+ height 1))) ;; in grid
-	 ;;     (let ((ge (aref grid x2 y2)))
-	 ;;       (when (not ge) (setf (aref grid x2 y2) t)
-	 ;; 	     (setq new-positions (cons (list x2 y2) new-positions))))))
-	 ;; (let ((x2 (+ x 1))(y2 y)) ;; GO RIGHT
-	 ;;   (when (and (>= x2 0)(>= y2 0)(<= x2 (+ width 1))(<= y2 (+ height 1))) ;; in grid
-	 ;;     (let ((ge (aref grid x2 y2)))
-	 ;;       (when (not ge) (setf (aref grid x2 y2) t)
-	 ;; 	     (setq new-positions (cons (list x2 y2) new-positions))))))
-	 ;; (let ((x2 x)(y2 y)) ;; STAY STILL
-	 ;;   (when (and (>= x2 0)(>= y2 0)(<= x2 (+ width 1))(<= y2 (+ height 1))) ;; in grid
-	 ;;     (let ((ge (aref grid x2 y2)))
-	 ;;       (when (not ge) (setf (aref grid x2 y2) t)
-	 ;; 	     (setq new-positions (cons (list x2 y2) new-positions))))))
-	  
-	  ))
-       new-positions)))
-	 
-
-(defun proceed-temp3 (p winds width height)
-  (let* ((p (filter p (%-in-play)))
-	 (p2 (progn (%-no-bliz)))
-	 (p3 (progn (break)(%-all-directions))))
-    p3))
-
-(defun proceed-test3 ()
-  (let* ((input *example1*)
-	 (winds (cdr (cdr input)))
-	 (width (car (car input)))
-	 (height (car (cdr (car input)))))
-    (proceed-temp3 '((502 303) (1 0)) winds width height)))
-
-
-|#
 
 
 
 
-
-
-
-
-
-
+      
 
 
