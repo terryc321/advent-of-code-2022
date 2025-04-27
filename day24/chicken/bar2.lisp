@@ -708,14 +708,8 @@ find all new positions and new winds
 |#
 
 
-(defun work (input)
-  (let ((winds (cdr (cdr input)))
-	(width (car (car input)))
-	(height (car (cdr (car input))))
-	(working (list (list 1 0)))
-	(todo '())
-	(step 0))
-    (catch 'solved
+(defun work2 (&key winds width height working step target iteration)
+  (let ((todo '()))
       ;; loop
       (loop while (not (null working)) do
 	(incf step)
@@ -735,23 +729,44 @@ find all new positions and new winds
 	(setq todo (avoid-blizzards :positions todo :winds winds))
 	
 	;; have we solved it yet 
-	(when (member (list width (+ height 1)) todo :test #'equalp)
-	  (format t "solved in ~a steps ~%" step)
-	  (throw 'solved t))
-
+	(when (member target todo :test #'equalp)
+	  (format t "solved iteration ~a goal in ~a steps ~%" iteration step)
+	  (cond
+	    ((= iteration 1) ;; first iteration we reached the goal 
+	     (work2 :winds winds :width width :height height
+		    :working (list (list width (+ height 1)))
+		    :step step :target (list 1 0) :iteration (+ iteration 1)))
+	    ((= iteration 2) ;; we reached the start again
+	     (work2 :winds winds :width width :height height
+		    :working (list (list 1 0))
+		    :step step :target (list width (+ height 1)) :iteration (+ iteration 1)))
+	    ((= iteration 3) ;; we reached the goal again
+	     (format t "SOLVED iteration ~a goal in ~a steps ~%" iteration step)	     
+	     (throw 'solved step))))
+	    
 	;; not solved it yet	
 	(setq working todo)
-	(setq todo nil)))))
+	(setq todo nil))))
 
 
 
-
-(defun part1 ()
-  (work *input*))
+(defun part2 ()
+  (let* ((input *input*)
+	 (winds (cdr (cdr input)))
+	 (width (car (car input)))
+	 (height (car (cdr (car input))))
+	 (working (list (list 1 0)))
+	 (target (list width (+ height 1)))
+	 (iter 1)
+	 (step 0))
+    (catch 'solved
+      (work2 :winds winds :width width :height height :working working :step step
+	     :target target :iteration iter))))
 
 
 #|
-FOO> (part1)
+
+FOO> (time (part2))
 working step 1 : 
 working step 2 : 
 working step 3 : 
@@ -1057,18 +1072,620 @@ working step 302 :
 working step 303 : 
 working step 304 : 
 working step 305 : 
-solved in 305 steps 
-T
+solved iteration 1 goal in 305 steps 
+working step 306 : 
+working step 307 : 
+working step 308 : 
+working step 309 : 
+working step 310 : 
+working step 311 : 
+working step 312 : 
+working step 313 : 
+working step 314 : 
+working step 315 : 
+working step 316 : 
+working step 317 : 
+working step 318 : 
+working step 319 : 
+working step 320 : 
+working step 321 : 
+working step 322 : 
+working step 323 : 
+working step 324 : 
+working step 325 : 
+working step 326 : 
+working step 327 : 
+working step 328 : 
+working step 329 : 
+working step 330 : 
+working step 331 : 
+working step 332 : 
+working step 333 : 
+working step 334 : 
+working step 335 : 
+working step 336 : 
+working step 337 : 
+working step 338 : 
+working step 339 : 
+working step 340 : 
+working step 341 : 
+working step 342 : 
+working step 343 : 
+working step 344 : 
+working step 345 : 
+working step 346 : 
+working step 347 : 
+working step 348 : 
+working step 349 : 
+working step 350 : 
+working step 351 : 
+working step 352 : 
+working step 353 : 
+working step 354 : 
+working step 355 : 
+working step 356 : 
+working step 357 : 
+working step 358 : 
+working step 359 : 
+working step 360 : 
+working step 361 : 
+working step 362 : 
+working step 363 : 
+working step 364 : 
+working step 365 : 
+working step 366 : 
+working step 367 : 
+working step 368 : 
+working step 369 : 
+working step 370 : 
+working step 371 : 
+working step 372 : 
+working step 373 : 
+working step 374 : 
+working step 375 : 
+working step 376 : 
+working step 377 : 
+working step 378 : 
+working step 379 : 
+working step 380 : 
+working step 381 : 
+working step 382 : 
+working step 383 : 
+working step 384 : 
+working step 385 : 
+working step 386 : 
+working step 387 : 
+working step 388 : 
+working step 389 : 
+working step 390 : 
+working step 391 : 
+working step 392 : 
+working step 393 : 
+working step 394 : 
+working step 395 : 
+working step 396 : 
+working step 397 : 
+working step 398 : 
+working step 399 : 
+working step 400 : 
+working step 401 : 
+working step 402 : 
+working step 403 : 
+working step 404 : 
+working step 405 : 
+working step 406 : 
+working step 407 : 
+working step 408 : 
+working step 409 : 
+working step 410 : 
+working step 411 : 
+working step 412 : 
+working step 413 : 
+working step 414 : 
+working step 415 : 
+working step 416 : 
+working step 417 : 
+working step 418 : 
+working step 419 : 
+working step 420 : 
+working step 421 : 
+working step 422 : 
+working step 423 : 
+working step 424 : 
+working step 425 : 
+working step 426 : 
+working step 427 : 
+working step 428 : 
+working step 429 : 
+working step 430 : 
+working step 431 : 
+working step 432 : 
+working step 433 : 
+working step 434 : 
+working step 435 : 
+working step 436 : 
+working step 437 : 
+working step 438 : 
+working step 439 : 
+working step 440 : 
+working step 441 : 
+working step 442 : 
+working step 443 : 
+working step 444 : 
+working step 445 : 
+working step 446 : 
+working step 447 : 
+working step 448 : 
+working step 449 : 
+working step 450 : 
+working step 451 : 
+working step 452 : 
+working step 453 : 
+working step 454 : 
+working step 455 : 
+working step 456 : 
+working step 457 : 
+working step 458 : 
+working step 459 : 
+working step 460 : 
+working step 461 : 
+working step 462 : 
+working step 463 : 
+working step 464 : 
+working step 465 : 
+working step 466 : 
+working step 467 : 
+working step 468 : 
+working step 469 : 
+working step 470 : 
+working step 471 : 
+working step 472 : 
+working step 473 : 
+working step 474 : 
+working step 475 : 
+working step 476 : 
+working step 477 : 
+working step 478 : 
+working step 479 : 
+working step 480 : 
+working step 481 : 
+working step 482 : 
+working step 483 : 
+working step 484 : 
+working step 485 : 
+working step 486 : 
+working step 487 : 
+working step 488 : 
+working step 489 : 
+working step 490 : 
+working step 491 : 
+working step 492 : 
+working step 493 : 
+working step 494 : 
+working step 495 : 
+working step 496 : 
+working step 497 : 
+working step 498 : 
+working step 499 : 
+working step 500 : 
+working step 501 : 
+working step 502 : 
+working step 503 : 
+working step 504 : 
+working step 505 : 
+working step 506 : 
+working step 507 : 
+working step 508 : 
+working step 509 : 
+working step 510 : 
+working step 511 : 
+working step 512 : 
+working step 513 : 
+working step 514 : 
+working step 515 : 
+working step 516 : 
+working step 517 : 
+working step 518 : 
+working step 519 : 
+working step 520 : 
+working step 521 : 
+working step 522 : 
+working step 523 : 
+working step 524 : 
+working step 525 : 
+working step 526 : 
+working step 527 : 
+working step 528 : 
+working step 529 : 
+working step 530 : 
+working step 531 : 
+working step 532 : 
+working step 533 : 
+working step 534 : 
+working step 535 : 
+working step 536 : 
+working step 537 : 
+working step 538 : 
+working step 539 : 
+working step 540 : 
+working step 541 : 
+working step 542 : 
+working step 543 : 
+working step 544 : 
+working step 545 : 
+working step 546 : 
+working step 547 : 
+working step 548 : 
+working step 549 : 
+working step 550 : 
+working step 551 : 
+working step 552 : 
+working step 553 : 
+working step 554 : 
+working step 555 : 
+working step 556 : 
+working step 557 : 
+working step 558 : 
+working step 559 : 
+working step 560 : 
+working step 561 : 
+working step 562 : 
+working step 563 : 
+working step 564 : 
+working step 565 : 
+working step 566 : 
+working step 567 : 
+working step 568 : 
+working step 569 : 
+working step 570 : 
+working step 571 : 
+working step 572 : 
+working step 573 : 
+working step 574 : 
+working step 575 : 
+working step 576 : 
+working step 577 : 
+working step 578 : 
+working step 579 : 
+working step 580 : 
+working step 581 : 
+working step 582 : 
+working step 583 : 
+working step 584 : 
+working step 585 : 
+working step 586 : 
+working step 587 : 
+working step 588 : 
+working step 589 : 
+solved iteration 2 goal in 589 steps 
+working step 590 : 
+working step 591 : 
+working step 592 : 
+working step 593 : 
+working step 594 : 
+working step 595 : 
+working step 596 : 
+working step 597 : 
+working step 598 : 
+working step 599 : 
+working step 600 : 
+working step 601 : 
+working step 602 : 
+working step 603 : 
+working step 604 : 
+working step 605 : 
+working step 606 : 
+working step 607 : 
+working step 608 : 
+working step 609 : 
+working step 610 : 
+working step 611 : 
+working step 612 : 
+working step 613 : 
+working step 614 : 
+working step 615 : 
+working step 616 : 
+working step 617 : 
+working step 618 : 
+working step 619 : 
+working step 620 : 
+working step 621 : 
+working step 622 : 
+working step 623 : 
+working step 624 : 
+working step 625 : 
+working step 626 : 
+working step 627 : 
+working step 628 : 
+working step 629 : 
+working step 630 : 
+working step 631 : 
+working step 632 : 
+working step 633 : 
+working step 634 : 
+working step 635 : 
+working step 636 : 
+working step 637 : 
+working step 638 : 
+working step 639 : 
+working step 640 : 
+working step 641 : 
+working step 642 : 
+working step 643 : 
+working step 644 : 
+working step 645 : 
+working step 646 : 
+working step 647 : 
+working step 648 : 
+working step 649 : 
+working step 650 : 
+working step 651 : 
+working step 652 : 
+working step 653 : 
+working step 654 : 
+working step 655 : 
+working step 656 : 
+working step 657 : 
+working step 658 : 
+working step 659 : 
+working step 660 : 
+working step 661 : 
+working step 662 : 
+working step 663 : 
+working step 664 : 
+working step 665 : 
+working step 666 : 
+working step 667 : 
+working step 668 : 
+working step 669 : 
+working step 670 : 
+working step 671 : 
+working step 672 : 
+working step 673 : 
+working step 674 : 
+working step 675 : 
+working step 676 : 
+working step 677 : 
+working step 678 : 
+working step 679 : 
+working step 680 : 
+working step 681 : 
+working step 682 : 
+working step 683 : 
+working step 684 : 
+working step 685 : 
+working step 686 : 
+working step 687 : 
+working step 688 : 
+working step 689 : 
+working step 690 : 
+working step 691 : 
+working step 692 : 
+working step 693 : 
+working step 694 : 
+working step 695 : 
+working step 696 : 
+working step 697 : 
+working step 698 : 
+working step 699 : 
+working step 700 : 
+working step 701 : 
+working step 702 : 
+working step 703 : 
+working step 704 : 
+working step 705 : 
+working step 706 : 
+working step 707 : 
+working step 708 : 
+working step 709 : 
+working step 710 : 
+working step 711 : 
+working step 712 : 
+working step 713 : 
+working step 714 : 
+working step 715 : 
+working step 716 : 
+working step 717 : 
+working step 718 : 
+working step 719 : 
+working step 720 : 
+working step 721 : 
+working step 722 : 
+working step 723 : 
+working step 724 : 
+working step 725 : 
+working step 726 : 
+working step 727 : 
+working step 728 : 
+working step 729 : 
+working step 730 : 
+working step 731 : 
+working step 732 : 
+working step 733 : 
+working step 734 : 
+working step 735 : 
+working step 736 : 
+working step 737 : 
+working step 738 : 
+working step 739 : 
+working step 740 : 
+working step 741 : 
+working step 742 : 
+working step 743 : 
+working step 744 : 
+working step 745 : 
+working step 746 : 
+working step 747 : 
+working step 748 : 
+working step 749 : 
+working step 750 : 
+working step 751 : 
+working step 752 : 
+working step 753 : 
+working step 754 : 
+working step 755 : 
+working step 756 : 
+working step 757 : 
+working step 758 : 
+working step 759 : 
+working step 760 : 
+working step 761 : 
+working step 762 : 
+working step 763 : 
+working step 764 : 
+working step 765 : 
+working step 766 : 
+working step 767 : 
+working step 768 : 
+working step 769 : 
+working step 770 : 
+working step 771 : 
+working step 772 : 
+working step 773 : 
+working step 774 : 
+working step 775 : 
+working step 776 : 
+working step 777 : 
+working step 778 : 
+working step 779 : 
+working step 780 : 
+working step 781 : 
+working step 782 : 
+working step 783 : 
+working step 784 : 
+working step 785 : 
+working step 786 : 
+working step 787 : 
+working step 788 : 
+working step 789 : 
+working step 790 : 
+working step 791 : 
+working step 792 : 
+working step 793 : 
+working step 794 : 
+working step 795 : 
+working step 796 : 
+working step 797 : 
+working step 798 : 
+working step 799 : 
+working step 800 : 
+working step 801 : 
+working step 802 : 
+working step 803 : 
+working step 804 : 
+working step 805 : 
+working step 806 : 
+working step 807 : 
+working step 808 : 
+working step 809 : 
+working step 810 : 
+working step 811 : 
+working step 812 : 
+working step 813 : 
+working step 814 : 
+working step 815 : 
+working step 816 : 
+working step 817 : 
+working step 818 : 
+working step 819 : 
+working step 820 : 
+working step 821 : 
+working step 822 : 
+working step 823 : 
+working step 824 : 
+working step 825 : 
+working step 826 : 
+working step 827 : 
+working step 828 : 
+working step 829 : 
+working step 830 : 
+working step 831 : 
+working step 832 : 
+working step 833 : 
+working step 834 : 
+working step 835 : 
+working step 836 : 
+working step 837 : 
+working step 838 : 
+working step 839 : 
+working step 840 : 
+working step 841 : 
+working step 842 : 
+working step 843 : 
+working step 844 : 
+working step 845 : 
+working step 846 : 
+working step 847 : 
+working step 848 : 
+working step 849 : 
+working step 850 : 
+working step 851 : 
+working step 852 : 
+working step 853 : 
+working step 854 : 
+working step 855 : 
+working step 856 : 
+working step 857 : 
+working step 858 : 
+working step 859 : 
+working step 860 : 
+working step 861 : 
+working step 862 : 
+working step 863 : 
+working step 864 : 
+working step 865 : 
+working step 866 : 
+working step 867 : 
+working step 868 : 
+working step 869 : 
+working step 870 : 
+working step 871 : 
+working step 872 : 
+working step 873 : 
+working step 874 : 
+working step 875 : 
+working step 876 : 
+working step 877 : 
+working step 878 : 
+working step 879 : 
+working step 880 : 
+working step 881 : 
+working step 882 : 
+working step 883 : 
+working step 884 : 
+working step 885 : 
+working step 886 : 
+working step 887 : 
+working step 888 : 
+working step 889 : 
+working step 890 : 
+working step 891 : 
+working step 892 : 
+working step 893 : 
+working step 894 : 
+working step 895 : 
+working step 896 : 
+working step 897 : 
+working step 898 : 
+working step 899 : 
+working step 900 : 
+working step 901 : 
+working step 902 : 
+working step 903 : 
+working step 904 : 
+working step 905 : 
+solved iteration 3 goal in 905 steps 
+SOLVED iteration 3 goal in 905 steps 
+Evaluation took:
+  10.999 seconds of real time
+  11.173884 seconds of total run time (11.147393 user, 0.026491 system)
+  [ Real times consist of 0.004 seconds GC time, and 10.995 seconds non-GC time. ]
+  [ Run times consist of 0.005 seconds GC time, and 11.169 seconds non-GC time. ]
+  101.59% CPU
+  40,551,689,584 processor cycles
+  441,298,928 bytes consed
+  
+905
 FOO>
 
 |#
-
-
-    
-
-
-
-
-      
-
-

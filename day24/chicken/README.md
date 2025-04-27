@@ -1,6 +1,14 @@
 
 # README
 
+[X] fun2.lisp - solves part1
+[X] bar2.lisp - solves part2
+
+
+# new look at writing code in common lisp 
+
+go back to baby steps 
+
 so this is interesting , running lisp and scheme code together
 
 lisp has great debugging ? well , it has a stepper - injected with sbcl nonsense
