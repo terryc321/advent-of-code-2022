@@ -147,7 +147,7 @@ whereas array check that could be true
 		 ;; ***
 ```
 
-# hidden crevace
+# hidden rock crevice becomes an ice crevasse
 
 ```lisp
 (let ((width 5)(height)(x 1)(y 1))
