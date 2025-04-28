@@ -1,5 +1,10 @@
 # aoc22day22
 
+- [X] Sanity input output and parsing done correctly
+ kdiff3 binary equivalence confirmed
+
+
+
 - [ ] Understand testing framework fiveam
 - [ ] Integrate fiveam into a quickproject (here aoc22day22)
 

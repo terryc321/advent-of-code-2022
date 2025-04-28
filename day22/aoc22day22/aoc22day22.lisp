@@ -98,13 +98,19 @@
 	       (loop for ch in (coerce line 'list) do
 		 (incf x)
 		 (cond
+		   ((char= ch #\space)
+		    (setq grid (cons (list x (- height y) ch) grid)))
 		   ((char= ch #\#)
-		    (setq grid (cons (list x y ch) grid)))
+		    (setq grid (cons (list x (- height y) ch) grid)))
 		   ((char= ch #\.)
-		    (setq grid (cons (list x y ch) grid))))))
+		    (setq grid (cons (list x (- height y) ch) grid))))))
 	     (setq lines (cdr lines))))
+    
+    (setq grid (reverse grid))
+
     (let ((code (parse-code (car lines))))
-      (list code grid))))
+      (cons code grid))))
+
 
 
 (defun parse (filename)
@@ -115,7 +121,127 @@
     (format t "lines => ~a~%" lines)
     (parse-lines lines)))
 
+;; make use of dynamic scope of start-square we can influence show-grid 
+(defparameter *start-square* nil)
+(defparameter *test1* (test-parse "grids/test1.txt"))
 (defparameter *example1* (test-parse "grids/example1.txt"))
 (defparameter *input* (test-parse "grids/input.txt"))
+
+;; this unique in determines max-x on a line per line basis
+;; determine size of grid to show
+;; find min max x y , show as a grid 
+(defun show-grid (input)
+  (let ((squares (cdr input))
+	(min-x nil)
+	(max-x nil)
+	(min-y nil)
+	(max-y nil))
+    
+    ;; determine min max for grid diagram
+    (loop for square in squares do
+      (destructuring-bind (x y ch) square
+      	(when (or (not min-x)(< x min-x)) (setq min-x x))
+	(when (or (not min-y)(< y min-y)) (setq min-y y))	
+	(when (or (not max-x)(> x max-x)) (setq max-x x))
+	(when (or (not max-y)(> y max-y)) (setq max-y y))))
+    
+    ;; only one square per x y so when seen it jump to next square
+    (loop for y from max-y downto min-y do       
+      (let ((max-x 0))
+	(loop for square in squares do
+	  (destructuring-bind (x2 y2 ch) square
+	    (cond
+	      ((= y2 y) (when (> x2 max-x) (setq max-x x2))))))
+      
+      (loop for x from min-x to max-x do
+	(catch 'seen
+	  (loop for square in squares do
+	    (destructuring-bind (x2 y2 ch) square
+	      (cond
+		((and (= x2 x)(= y2 y))
+		 (cond
+		   ((equalp *start-square* (list x y)) (format t "(~a)" ch))
+		   (t (format t "~a" ch)))
+		 (throw 'seen t)))))
+	  ;; no char registered must mean this is a blank square
+	  ;;(format t " ")
+	  )))
+      (format t "~%"))))
+
+
+;; show code
+(defun show-code (code)
+  (loop for x in code do
+    (format t "~a" x)))
+
+;; check input sanity
+;; show grid then newline then codes
+(defun sanity-input ()
+  (with-open-file (*standard-output* "grids/input.dat"
+                                   :direction :output
+                                   :if-exists :supersede)
+    (let ((grid (cdr *input*))
+	  (code (car *input*)))
+      (show-grid *input*)
+      (format t "~%")
+      (show-code code)
+      (format t "~%")
+      )))
+
+
+;; find start position
+(defun start-position (input)
+  (let ((squares (cdr input))
+	(start-x nil)
+	(start-y nil))
+    
+    ;; determine min max for grid diagram
+    (loop for square in squares do
+      (destructuring-bind (x y ch) square
+	(when (or (not start-y) (>= y start-y))
+	  (setq start-y y)
+	  (when (and (char= ch #\.)
+		     (or (not start-x) (< x start-x)))
+	    (setq start-x x)))))
+
+    (let* ((start (list start-x start-y))
+	   (*start-square* start))
+      ;;(show-grid input)
+      start)))
+
+    
+#|
+initially facing right
+get position from start-position
+
+
+|#
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
