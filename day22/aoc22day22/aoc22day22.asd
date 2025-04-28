@@ -6,6 +6,17 @@
   :license  "Specify license here"
   :version "0.0.1"
   :serial t
-  :depends-on (#:fiveam)
+  :depends-on (:fiveam)
   :components ((:file "package")
                (:file "aoc22day22")))
+
+
+(asdf:defsystem #:aoc22day22-tests
+  :description "Describe aoc22day22 here"
+  :author "Your Name <your.name@example.com>"
+  :license  "Specify license here"
+  :version "0.0.1"
+  :serial t
+  :depends-on (:fiveam)
+  :components ((:file "package")
+               (:file "aoc22day22-tests")))
