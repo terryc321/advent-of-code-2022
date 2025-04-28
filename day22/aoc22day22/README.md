@@ -2,8 +2,22 @@
 
 - [X] Sanity input output and parsing done correctly
  kdiff3 binary equivalence confirmed
+- [ ] Puzzle requires knowing the wrap around next position 
+  lets pre compute this 
+```lisp
 
+# is a gate cannot go here
+. is open square 
+' ' empty space which is no mans land cannot go here either 
 
+structure 
+x 
+y 
+left -> take to another structure ? which represents a square on the grid
+right ->
+up ->
+down ->
+```
 
 - [ ] Understand testing framework fiveam
 - [ ] Integrate fiveam into a quickproject (here aoc22day22)

@@ -99,18 +99,20 @@
 		 (incf x)
 		 (cond
 		   ((char= ch #\space)
-		    (setq grid (cons (list x (- height y) ch) grid)))
+		    (setq grid (cons (list x y ch) grid)))
 		   ((char= ch #\#)
-		    (setq grid (cons (list x (- height y) ch) grid)))
+		    (setq grid (cons (list x y ch) grid)))
 		   ((char= ch #\.)
-		    (setq grid (cons (list x (- height y) ch) grid))))))
+		    (setq grid (cons (list x y ch) grid)))
+		   (t
+		    (setq grid (cons (list x y ch) grid)))
+		   )))
 	     (setq lines (cdr lines))))
     
     (setq grid (reverse grid))
 
     (let ((code (parse-code (car lines))))
       (cons code grid))))
-
 
 
 (defun parse (filename)
@@ -146,12 +148,12 @@
 	(when (or (not max-y)(> y max-y)) (setq max-y y))))
     
     ;; only one square per x y so when seen it jump to next square
-    (loop for y from max-y downto min-y do       
-      (let ((max-x 0))
-	(loop for square in squares do
-	  (destructuring-bind (x2 y2 ch) square
-	    (cond
-	      ((= y2 y) (when (> x2 max-x) (setq max-x x2))))))
+    (loop for y from min-y to max-y do       
+    ;;   (let ((max-x 0))
+    ;; 	(loop for square in squares do
+    ;; 	  (destructuring-bind (x2 y2 ch) square
+    ;; 	    (cond
+    ;; 	      ((= y2 y) (when (> x2 max-x) (setq max-x x2))))))
       
       (loop for x from min-x to max-x do
 	(catch 'seen
@@ -165,7 +167,7 @@
 		 (throw 'seen t)))))
 	  ;; no char registered must mean this is a blank square
 	  ;;(format t " ")
-	  )))
+	  ))
       (format t "~%"))))
 
 
@@ -188,31 +190,65 @@
       (format t "~%")
       )))
 
-
-;; find start position
-(defun start-position (input)
-  (let ((squares (cdr input))
-	(start-x nil)
-	(start-y nil))
+;; hash table of it
+(defun make-input-hash (input)
+  (let ((hash (make-hash-table :test #'equalp))
+	(squares (cdr input))
+	(min-x nil)
+	(max-x nil)
+	(min-y nil)
+	(max-y nil))
     
     ;; determine min max for grid diagram
     (loop for square in squares do
       (destructuring-bind (x y ch) square
-	(when (or (not start-y) (>= y start-y))
-	  (setq start-y y)
-	  (when (and (char= ch #\.)
-		     (or (not start-x) (< x start-x)))
-	    (setq start-x x)))))
+      	(when (or (not min-x)(< x min-x)) (setq min-x x))
+	(when (or (not min-y)(< y min-y)) (setq min-y y))	
+	(when (or (not max-x)(> x max-x)) (setq max-x x))
+	(when (or (not max-y)(> y max-y)) (setq max-y y))
+	(setf (gethash (list x y) hash) ch)))
+    (lambda (op &rest args)
+      (cond
+	((eq op 'look) (let ((x (first args))(y (second args)))
+			 (gethash (list x y) hash nil)))
+	((eq op 'width) (- max-x min-x))
+	((eq op 'height) (- max-y min-y))
+	(t (error "input-hash"))))))
 
+
+
+;; for my data 
+;; start square should be (51,1) meaning 1st row and 51 characters across
+
+;; find start position
+(defun start-position (input)
+  (declare (optimize (debug 3)));;
+  (let ((squares (cdr input))
+	(start-x nil)
+	(start-y 1))
+    
+    ;; determine min max for grid diagram
+    (loop for square in squares do
+      (destructuring-bind (x y ch) square
+	(cond
+	  ((= y 1)
+	   (when (char= ch #\.)
+	     (cond	      
+	       ((not start-x) (setq start-x x))
+	       ((< x start-x) (setq start-x x))))))))
+    
     (let* ((start (list start-x start-y))
 	   (*start-square* start))
-      ;;(show-grid input)
+      (show-grid input)
       start)))
+
+
 
     
 #|
 initially facing right
 get position from start-position
+simplify problem by making a hash table - have a character as value - key (x,y)
 
 
 |#
