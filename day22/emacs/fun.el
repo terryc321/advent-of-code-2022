@@ -1,190 +1,7 @@
 
-#|
+;; prefix fun prevent name clash
 
-read in characters from a file and make a "grid" in a hash map so
-given a coordinate - say what should be the square above or below , left or right...
-
-
-|#
-
-(import (chicken format))
-(import (chicken pretty-print))
-(import srfi-69)
-(import srfi-1)
-
-(import (chicken process-context))
-;; (current-directory)
-;; (change-directory "day22/chicken")
-(import (chicken io))
-
-(define (readlines filename)
-  (call-with-input-file filename
-    (lambda (p)
-      (let loop ((line (read-line p))
-                 (result '()))
-        (if (eof-object? line)
-            (reverse result)
-            (loop (read-line p) (cons line result)))))))
-
-
-(define *input* (readlines "input.txt"))
-
-(define *max-x* 0)
-(define *max-y* 0)
-(define *min-x* 1)
-(define *min-y* 1)
-
-(define *map* (make-hash-table #:test equal?))
-
-(define *left-map* (make-hash-table #:test equal?))
-(define *right-map* (make-hash-table #:test equal?))
-
-(define *up-map* (make-hash-table #:test equal?))
-(define *down-map* (make-hash-table #:test equal?))
-
-
-;; lines without last 2 lines (empty line + code line)
-(define (process in)  
-  (let ((lines (reverse (cdr (cdr (reverse in))))))
-    (process2 lines 0 (length lines) '())))
-
-(define (process2 in i nlines acc)
-  (cond
-   ((>= i (- nlines 1)) acc)
-   (#t (let ((str (list-ref in i)))
-	 (let ((strlen (string-length str)))
-	   (let loop ((j 0))
-	     (cond
-	      ((< j strlen)	       
-	       (let ((ch (string-ref str j)))
-		 (format #t "(i ~a, j ~a) =~a ~%" (+ i 1) (+ j 1) ch)
-		 (when (or (char>? ch #\space))
-		   (hash-table-set! *map* (list (+ j 1) (+ i 1) ) ch)
-
-		   ;; record max x y
-		   (when (> (+ i 1) *max-y*)
-		     (set! *max-y* (+ i 1)))
-		   
-		   (when (> (+ j 1) *max-x*)
-		     (set! *max-x* (+ j 1)))
-		   
-		   ;;(set! acc (cons (list (+ i 1) (+ j 1) ch) acc))
-		   )		   
-	       (loop (+ j 1))))
-	      (#t
-	       ;; move onto next line
-	       (process2 in (+ i 1) nlines acc)
-	       ))))))))
-
-
-
-(set! *map* (make-hash-table))
-(process *input*)
-
-(define (lookup x y)
-  (hash-table-ref/default *map* (list x y) #f))
-
-
-
-;; scope of puzzle
-;; *max-x* *max-y* *min-x* *min-y*
-;; 199     150        1       1
-
-;; x-1 y is in the hash then job done else keep going right until cannot go right no more
-;; unless x y is not a valid square 
-
-
-;; find left either directly left or keep going right until nothing then backup one
-(define (find-left x y)
-  (let ((out (hash-table-ref/default *map* (list x y) #f)))
-    (when out
-      (let ((tmp (hash-table-ref/default *map* (list (- x 1) y) #f)))
-	(cond
-	 (tmp (hash-table-set! *left-map* (list x y) (list (- x 1) y))
-	      (list (- x 1) y))
-	 (#t (let loop ((i x))
-	       (let ((out2 (hash-table-ref/default *map* (list i y) #f)))
-		 (cond
-		  (out2 (loop (+ i 1)))
-		  (#t 
-		   (hash-table-set! *left-map* (list x y) (list (- i 1) y))
-		   (list (- i 1) y)))))))))))
-
-(define (find-right x y)
-  (let ((out (hash-table-ref/default *map* (list x y) #f)))
-    (when out
-      (let ((tmp (hash-table-ref/default *map* (list (+ x 1) y) #f)))
-	(cond
-	 (tmp (hash-table-set! *right-map* (list x y) (list (+ x 1) y))
-	      (list (+ x 1) y))
-	 (#t (let loop ((i x))
-	       (let ((out2 (hash-table-ref/default *map* (list i y) #f)))
-		 (cond
-		  (out2 (loop (- i 1)))
-		  (#t
-		   ;; backup one square
-		   (hash-table-set! *right-map* (list x y) (list (+ i 1) y))
-		   (list (+ i 1) y)))))))))))
-
-;; forms a self check LEFT - RIGHT 
-;; find-lefts 150 1 -> 149 1
-;; find-rights 149 1 -> 150 1
-
-;; (x,y) position has to be a valid position before find - down makes sense
-(define (find-down x y) 
-  (let ((out (hash-table-ref/default *map* (list x y) #f)))
-    (when out
-      (let ((tmp (hash-table-ref/default *map* (list x (+ y 1)) #f)))
-	(cond
-	 (tmp (hash-table-set! *down-map* (list x y) (list x (+ y 1)))
-	      (list x (+ y 1)))
-	 (#t (let loop ((i y))
-	       ;; (format #t "find-down x = ~a : y = ~a ~%" x y)
-	       (let ((out2 (hash-table-ref/default *map* (list x i) #f)))
-		 (cond
-		  (out2 (loop (- i 1)))
-		  (#t 
-		   (hash-table-set! *down-map* (list x y) (list x (+ i 1)))
-		   (list x (+ i 1))))))))))))
-
-
-(define (find-up x y)
-  (let ((out (hash-table-ref/default *map* (list x y) #f)))
-    (when out
-      (let ((tmp (hash-table-ref/default *map* (list x (- y 1)) #f)))
-	(cond
-	 (tmp (hash-table-set! *up-map* (list x y) (list x (- y 1)))
-	      (list x (- y 1)))
-	 (#t (let loop ((i y))
-	       (let ((out2 (hash-table-ref/default *map* (list x i) #f)))
-		 (cond
-		  (out2 (loop (+ i 1)))
-		  (#t 
-		   (hash-table-set! *up-map* (list x y) (list x (- i 1)))
-		   (list x (- i 1))))))))))))
-
-
-
-(define (up x y) (hash-table-ref/default *up-map* (list x y) #f))
-(define (left x y) (hash-table-ref/default *left-map* (list x y) #f))
-(define (right x y) (hash-table-ref/default *right-map* (list x y) #f))
-(define (down x y) (hash-table-ref/default *down-map* (list x y) #f))
-
-(define (all-directions)
-  (let loop ((x 1)(y 1))
-    (cond
-     ((> x *max-x*) (loop 1 (+ y 1)))
-     ((> y *max-y*) #f)
-     (#t (find-left x y)
-	 (find-right x y)
-	 (find-up x y)
-	 (find-down x y)
-	 (loop (+ x 1) y)))))
-
-(all-directions)
-
-
-(define *codes*
+(setq fun-codes
   '(5 L 37 R 32 R 38 R 28 L 18 R 11 R 37 R 41 R 42 L 8 L 3 R 14 L 22
       L 28 R 4 L 32 R 44 R 3 R 45 L 44 L 39 L 27 L 25 L 7 R 32 L 36 R
       21 L 29 R 33 R 37 L 37 R 19 L 44 R 36 L 14 R 45 R 13 R 32 L 9 R
@@ -335,144 +152,318 @@ given a coordinate - say what should be the square above or below , left or righ
       R 38 L 37 R 34 R 32 L 9 L 26 R 50 L 47 L 25 R 18 R 46 R 47 R 42 L
       35 R 8))
 
+(setq fun-direction 'east)
+(setq fun-x 55)
+(setq fun-y 7)
 
-;; by visual inspection and neovim (row column) reverse line1,51
-(define *start-x* 51)
-(define *start-y* 1)
-(define *start-direction* 'east)
+(defun fun-reset ()
+  (interactive)
+  (setq fun-direction 'east)
+  (setq fun-x 55)
+  (setq fun-y 7)
+  (setq fun-ptr fun-codes)
+  (goto-line fun-y)
+  (forward-char fun-x))
 
-(define *x* *start-x*)
-(define *y* *start-y*)
-(define *direction* *start-direction*)
-
-
-(define (turn-left)
-  (cond
-   ((eq? *direction* 'north) (set! *direction* 'west))
-   ((eq? *direction* 'east) (set! *direction* 'north))
-   ((eq? *direction* 'south) (set! *direction* 'east))
-   ((eq? *direction* 'west) (set! *direction* 'south))
-   (#t (error "turn-left"))))
-
-
-(define (turn-right)
-  (cond
-   ((eq? *direction* 'north) (set! *direction* 'east))
-   ((eq? *direction* 'east) (set! *direction* 'south))
-   ((eq? *direction* 'south) (set! *direction* 'west))
-   ((eq? *direction* 'west) (set! *direction* 'north))
-   (#t (error "turn-right"))))
-
-
-(define (forward-north n)
-  (cond
-   ((< n 1) #f)
-   (#t (let* ((tmp (up *x* *y*))
-	      (x (car tmp))
-	      (y (car (cdr tmp)))
-	      (out (lookup x y)))
-	 (cond
-	  ((equal? out #\.) (set! *x* x) (set! *y* y) (forward-north (- n 1)))
-	  (#t #f))))))
-
-	  
-(define (forward-south n)
-  (cond
-   ((< n 1) #f)
-   (#t (let* ((tmp (down *x* *y*))
-	      (x (car tmp))
-	      (y (car (cdr tmp)))
-	      (out (lookup x y)))
-	 (cond
-	  ((equal? out #\.) (set! *x* x) (set! *y* y) (forward-south (- n 1)))
-	  (#t #f))))))
-
-
-(define (forward-east n)
-  (cond
-   ((< n 1) #f)
-   (#t (let* ((tmp (right *x* *y*))
-	      (x (car tmp))
-	      (y (car (cdr tmp)))
-	      (out (lookup x y)))
-	 (cond
-	  ((equal? out #\.) (set! *x* x) (set! *y* y) (forward-east (- n 1)))
-	  (#t #f))))))
-
-	  
-(define (forward-west n)
-  (cond
-   ((< n 1) #f)
-   (#t (let* ((tmp (left *x* *y*))
-	      (x (car tmp))
-	      (y (car (cdr tmp)))
-	      (out (lookup x y)))
-	 (cond
-	  ((equal? out #\.) (set! *x* x) (set! *y* y) (forward-west (- n 1)))
-	  (#t #f))))))
-
-(define (facing)
-  (cond
-   ((eq? *direction* 'east) 0) ;; 0 for right
-   ((eq? *direction* 'north) 3) ;; 3 for up 
-   ((eq? *direction* 'south) 1) ;; 1 for down
-   ((eq? *direction* 'west) 2) ;; 2 for left 
-   (#t (error "facing"))))
-
-
-   
-
-
-(define (run)
-  (let loop ((codes *codes*))
-    (cond
-     ((null? codes) (list *x* *y*))
-     (#t (let ((instruction (car codes)))
-	   (cond
-	    ((eq? instruction 'L) (turn-left)(loop (cdr codes)))
-	    ((eq? instruction 'R) (turn-right)(loop (cdr codes)))
-	    ((integer? instruction)
-	     (let ((forward #f))
-	       (cond
-		((eq? *direction* 'north) (set! forward forward-north))
-		((eq? *direction* 'south) (set! forward forward-south))
-		((eq? *direction* 'east) (set! forward forward-east))
-		((eq? *direction* 'west) (set! forward forward-west))
-		(#t (error "instruction+int+dir")))
-	       (forward instruction)
-	       (loop (cdr codes))))
-	    (#t (error "instruction+run"))))))))
-
-
-(define (part1)
-  (run)
-  (+ (* 1000 *y*)
-     (* 4 *x*)
-     (facing)))
-
-
-;; thats not the right answer - boo hoo ...
-;; 11582
-
-
-
-
-
-
-
-
-
-
-
-
-
-		   
-	  
-     
   
 
+;; (defun fun ()
+;;   (interactive)
+;;   (fun-reset)
+;;   (with-current-buffer (find-file "input.txt")
+;;     (read-only-mode 1)
+;;     (fun-start)))
+
+;; (defun fun-start ()
+;;   ;; (interactive)
+;;   (goto-line fun-y)
+;;   (forward-char fun-x)
+;;   (message "we are ready! %d %d" fun-x fun-y)
+;;   (remove-overlays (point-min) (point-max))
+;;   (setq buffer-read-only t)
+;;   (fun-loop))
+
+(defun fun-turn-left ()
+  ;; (interactive)
+  (cond
+   ((eq fun-direction 'east) (setq fun-direction 'north))
+   ((eq fun-direction 'south) (setq fun-direction 'east))
+   ((eq fun-direction 'west) (setq fun-direction 'south))
+   ((eq fun-direction 'north) (setq fun-direction 'west))
+   (t (error "bad turn left"))))
+
+   
+(defun fun-turn-right ()
+  ;; (interactive)
+  (cond
+   ((eq fun-direction 'east) (setq fun-direction 'south))
+   ((eq fun-direction 'south) (setq fun-direction 'west))
+   ((eq fun-direction 'west) (setq fun-direction 'north))
+   ((eq fun-direction 'north) (setq fun-direction 'east))
+   (t (error "bad turn right"))))
+
+(defun fun-step ()
+  (interactive)
+  (cond
+   ((null fun-ptr) (message "we have finished !"))
+   (t 
+      (let ((fun-command (car fun-ptr)))
+	(setq fun-ptr (cdr fun-ptr))
+	(message "command is %s" fun-command)
+	(sleep-for 0.5)
+	(cond
+	 ((eq fun-command 'L) (fun-turn-left))
+	 ((eq fun-command 'R) (fun-turn-right))
+	 ((integerp fun-command) (fun-forward fun-command))
+	 (t (error "bad command")))
+	(fun-status)))))
+
+
+(defun fun-status ()
+  (message "Line: %d, Column: %d , direction %s"
+         (line-number-at-pos)
+         (current-column)
+	 fun-direction))
 
 
 
+
+
+;; (defun fun-loop ()
+;;   (let ((fun-ptr fun-codes))
+;;     (while (not (null fun-ptr))
+;;       (let ((fun-command (car fun-ptr)))
+;; 	(setq fun-ptr (cdr fun-ptr))
+;; 	(cond
+;; 	 ((eq fun-command 'L) (fun-turn-left))
+;; 	 ((eq fun-command 'R) (fun-turn-right))
+;; 	 ((integerp fun-command) (fun-forward fun-command))
+;; 	 (t (error "bad command")))))))
+
+
+
+(defun fun-forward (n)
+  ;; (interactive "nForward how many :")   
+  (cond
+   ((< n 1) (error "bad fun-foward"))
+   ((eq fun-direction 'east) (fun-forward-east n))
+   ((eq fun-direction 'west) (fun-forward-west n))
+   ((eq fun-direction 'south) (fun-forward-south n))
+   ((eq fun-direction 'north) (fun-forward-north n))
+   (t (error "bad forward"))))
+
+
+
+;; we 
+;;max-lisp-eval-depth
+;; we are at fun-x fun-y
+;; forward char ... is the character at point a dot ,
+;; (set-mark)
+;; (deactivate-mark)
+(defun fun-forward-east (n)
+  ;; (interactive "nforward how many: ")
+  (cond
+   ((< n 1) t)
+   (t
+    (cl-assert (char-equal (char-after (point)) ?.))
+    (set-mark (point))
+    (forward-char)
+    (cond
+     ((char-equal (char-after (point)) ?.)
+      (deactivate-mark)
+      (fun-forward-east (- n 1)))
+     ((char-equal (char-after (point)) ?#)
+      (goto-char (mark))
+      (deactivate-mark))
+     (t
+      (beginning-of-line)
+      (while (not (or (char-equal (char-after (point)) ?.)
+		      (char-equal (char-after (point)) ?#)))
+	(forward-char))
+      (cond
+       ((char-equal (char-after (point)) ?.)
+	(deactivate-mark)
+	(fun-forward-east (- n 1)))
+       (t
+	(goto-char (mark))
+	(deactivate-mark))))))))
+
+
+(defun fun-forward-west (n)
+  ;; (interactive "nforward how many: ")
+  (cond
+   ((< n 1) t)
+   (t
+    (cl-assert (char-equal (char-after (point)) ?.))
+    (set-mark (point))
+    (backward-char)
+    (cond
+     ((char-equal (char-after (point)) ?.)
+      (deactivate-mark)
+      (fun-forward-west (- n 1)))
+     ((char-equal (char-after (point)) ?#)
+      (goto-char (mark))
+      (deactivate-mark))
+     (t
+      (end-of-line)
+      (while (not (or (char-equal (char-after (point)) ?.)
+		      (char-equal (char-after (point)) ?#)))
+	(backward-char))
+      (cond
+       ((char-equal (char-after (point)) ?.)
+	(deactivate-mark)
+	(fun-forward-west (- n 1)))
+       (t
+	(goto-char (mark))
+	(deactivate-mark))))))))
+
+
+
+(defun fun-forward-north (n)
+  (cond
+   ((< n 1) t)
+   (t
+    (cl-assert (char-equal (char-after (point)) ?.))
+    (set-mark (point))
+    (previous-line)
+    (cond
+     ((char-equal (char-after (point)) ?.)
+      (deactivate-mark)
+      (fun-forward-north (- n 1)))
+     ((char-equal (char-after (point)) ?#)
+      (goto-char (mark))
+      (deactivate-mark))
+     (t
+      (next-line)
+      (while (or (char-equal (char-after (point)) ?.)
+		 (char-equal (char-after (point)) ?#))
+	(next-line))
+      (previous-line)
+      (cl-assert (or (char-equal (char-after (point)) ?.)
+		     (char-equal (char-after (point)) ?#)))		    
+      (cond
+       ((char-equal (char-after (point)) ?.)
+	(deactivate-mark)
+	(fun-forward-north (- n 1)))
+       (t
+	(goto-char (mark))
+	(deactivate-mark))))))))
+
+
+(defun fun-forward-south (n)
+  (cond
+   ((< n 1) t)
+   (t
+    (cl-assert (char-equal (char-after (point)) ?.))
+    (set-mark (point))
+    (next-line)
+    (cond
+     ((char-equal (char-after (point)) ?.)
+      (deactivate-mark)
+      (fun-forward-south (- n 1)))
+     ((char-equal (char-after (point)) ?#)
+      (goto-char (mark))
+      (deactivate-mark))
+     (t
+      (previous-line)
+      (while (or (char-equal (char-after (point)) ?.)
+		 (char-equal (char-after (point)) ?#))
+	(previous-line))
+      (next-line)
+      (cl-assert (or (char-equal (char-after (point)) ?.)
+		     (char-equal (char-after (point)) ?#)))		    
+      (cond
+       ((char-equal (char-after (point)) ?.)
+	(deactivate-mark)
+	(fun-forward-south (- n 1)))
+       (t
+	(goto-char (mark))
+	(deactivate-mark))))))))
+
+
+
+
+
+;; (fun-forward-east 10)
 	      
+;; (defun fun-keep-going-west ()
+;; 		(interactive)
+;;   (while (let ((fun-ch (char-before (point))))
+;; 	   (or (char-equal fun-ch ?.)
+;; 	       (char-equal fun-ch ?#)))
+;;     (backward-char))
+;;   (let ((fun-out (char-equal (char-after (point)) ?.)))
+;;     (message "fun-keep-going-west %s" fun-out)
+;;     fun-out))
+
+  
+
+	   
+  ;; (char-after (point))#A
+  ;; (char-before (point))
+  ;; (char-before (point))#
+;; (char-equal ?a ?#)
+
+;; how do i echo something to emacs echo ?
+  
+
+(defun my-left-arrow-handler ()
+  (interactive)
+  (fun-forward-west 1)
+  (message "Left arrow pressed in my-mode!"))
+
+(defun my-right-arrow-handler ()
+  (interactive)
+  (fun-forward-east 1)
+  (message "right arrow pressed in my-mode!"))
+
+(defun my-down-arrow-handler ()
+  (interactive)
+  (fun-forward-south 1)
+  (message "down arrow pressed in my-mode!"))
+
+(defun my-up-arrow-handler ()
+  (interactive)
+  (fun-forward-north 1)
+  (message "up arrow pressed in my-mode!"))
+
+(defun my-reset-handler ()
+  (interactive)
+  (fun-reset)
+  (message "reset in my-mode!"))
+
+(defun my-step-handler ()
+  (interactive)
+  (fun-step))
+
+
+
+(defun my-custom-command ()
+  (interactive)
+  (message "C-c C-x triggered in my-mode!"))
+
+(defvar my-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "<left>") #'my-left-arrow-handler)
+    (define-key map (kbd "<right>") #'my-right-arrow-handler)
+    (define-key map (kbd "<up>") #'my-up-arrow-handler)
+    (define-key map (kbd "<down>") #'my-down-arrow-handler)
+    (define-key map (kbd "s") #'my-step-handler)    
+    (define-key map (kbd "r") #'my-reset-handler)    
+    (define-key map (kbd "C-c C-x") #'my-custom-command)
+    map)
+  "Keymap for `my-mode`.")
+
+
+(define-derived-mode my-mode fundamental-mode "MyMode"
+  "My major mode with keybindings."
+  :keymap my-mode-map)
+
+;; (define-derived-mode my-mode fundamental-mode "MyMode"
+;;   "A simple major mode example."
+;;   (setq font-lock-defaults '(my-mode-font-lock-keywords)))
+
+;; (defvar my-mode-font-lock-keywords
+;;   '(("TODO" . font-lock-warning-face)
+;;     ("\\<\\(FIXME\\|BUG\\)\\>" . font-lock-warning-face)))
 

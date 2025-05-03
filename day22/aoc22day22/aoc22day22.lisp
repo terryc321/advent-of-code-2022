@@ -209,8 +209,15 @@
 	(setf (gethash (list x y) hash) ch)))
     (lambda (op &rest args)
       (cond
-	((eq op 'look) (let ((x (first args))(y (second args)))
-			 (gethash (list x y) hash nil)))
+	;; every square will return either # gate or . open or #\? nowhere
+	((eq op 'look) (let* ((x (first args))
+			     (y (second args))
+			     (ch (gethash (list x y) hash nil)))
+			 (cond
+			   ((null ch) #\?)
+			   ((char= ch #\#) ch)
+			   ((char= ch #\.) ch)
+			   ((char= ch #\space) #\?))))
 	((eq op 'width) (- max-x min-x))
 	((eq op 'height) (- max-y min-y))
 	(t (error "input-hash"))))))
@@ -239,20 +246,149 @@
     
     (let* ((start (list start-x start-y))
 	   (*start-square* start))
-      (show-grid input)
+      ;;(show-grid input)
       start)))
 
+;; 200
+(defparameter *max-height* 200)
 
+
+;; 150
+(defparameter *max-width* 150)
 
     
 #|
-initially facing right
-get position from start-position
-simplify problem by making a hash table - have a character as value - key (x,y)
 
+initially facing right
+
+get position from start-position
+
+simplify problem by making a hash table - have a character as value - key (x,y)
 
 |#
 
+(defmacro %%move-right%% ()
+  `(catch 'stop
+     (loop for i from 1 to n do
+       (format t "i = ~a ~%" i)
+      (let* ((x2 (+ x 1))(y2 y)(ch (funcall hfn 'look x2 y2)))
+	(cond
+	  ((char= ch #\#) 'stop! (throw 'stop t))
+	  ((char= ch #\.) 'ok (setq x (+ x 1)))
+	  (t ;; wrap
+	   (format t "RIGHT: char got ~a ~%" ch)
+	   (catch 'wrapped
+	     (loop for px from 1 do
+	       (format t "px = ~a ~%" px)
+	       (let ((ch (funcall hfn 'look px y)))
+		 (cond
+		   ((char= ch #\#) 'stop! (throw 'stop t))
+		   ((char= ch #\.) 'ok (setq x px)(throw 'wrapped t))
+		   (t 'keep-looking)))))))))))
+
+
+(defmacro %%move-down%% ()
+  `(catch 'stop
+    (loop for i from 1 to n do 
+      (let* ((x2 x)(y2 (+ y 1))(ch (funcall hfn 'look x2 y2)))
+	(cond
+	  ((char= ch #\#) 'stop! (throw 'stop t))
+	  ((char= ch #\.) 'ok (setq y (+ y 1)))
+	  (t ;; wrap
+	   (catch 'wrapped
+	     (loop for py from 1 do
+	       (let ((ch (funcall hfn 'look x py)))
+		 (cond
+		   ((char= ch #\#) 'stop! (throw 'stop t))
+		   ((char= ch #\.) 'ok (setq y py)(throw 'wrapped t))
+		   (t 'keep-looking)))))))))))
+
+
+(defmacro %%move-up%% ()
+  `(catch 'stop
+    (loop for i from 1 to n do 
+      (let* ((x2 x)(y2 (- y 1))(ch (funcall hfn 'look x2 y2)))
+	(cond
+	  ((char= ch #\#) 'stop! (throw 'stop t))
+	  ((char= ch #\.) 'ok (setq y (+ y 1)))
+	  (t ;; wrap
+	   (catch 'wrapped
+	     (loop for py from *max-height* downto 1 do
+	       (let ((ch (funcall hfn 'look x py)))
+		 (cond
+		   ((char= ch #\#) 'stop! (throw 'stop t))
+		   ((char= ch #\.) 'ok (setq y py)(throw 'wrapped t))
+		   (t 'keep-looking)))))))))))
+
+
+(defmacro %%move-left%% ()
+  `(catch 'stop
+    (loop for i from 1 to n do 
+      (let* ((x2 (- x 1))(y2 y)(ch (funcall hfn 'look x2 y2)))
+	(cond
+	  ((char= ch #\#) 'stop! (throw 'stop t))
+	  ((char= ch #\.) 'ok (setq x (+ x 1)))
+	  (t ;; wrap
+	   (catch 'wrapped
+	     (loop for px from *max-width* downto 1 do
+	       (let ((ch (funcall hfn 'look px y)))
+		 (cond
+		   ((char= ch #\#) 'stop! (throw 'stop t))
+		   ((char= ch #\.) 'ok (setq x px)(throw 'wrapped t))
+		   (t 'keep-looking)))))))))))
+
+
+(defun fun ()
+  (let* ((input *input*)
+	 (codes (car input))
+	 (hfn (make-input-hash input))
+	 (pos (start-position input))
+	 (dir 'right))
+    (destructuring-bind (x y) pos
+      (let ((i 1))
+	(format t "codes (~a) => ~a~%" i codes)
+	(incf i))
+      (labels ((turn-right ()
+		 (cond
+		   ((eq dir 'right) (setq dir 'down))
+		   ((eq dir 'down) (setq dir 'left))
+		   ((eq dir 'left) (setq dir 'up))
+		   ((eq dir 'up) (setq dir 'right))
+		   (t (error "turn-right"))))
+	       (turn-left ()
+		 (cond
+		   ((eq dir 'right) (setq dir 'up))
+		   ((eq dir 'down) (setq dir 'right))
+		   ((eq dir 'left) (setq dir 'down))
+		   ((eq dir 'up) (setq dir 'left))
+		   (t (error "turn-left"))))
+	       (forward (n)
+		 (cond
+		   ((eq dir 'right) (format t "(~a,~a,~a)~%" x y dir) (%%move-right%%))
+		   ((eq dir 'down) (%%move-down%%))
+		   ((eq dir 'left) (%%move-left%%))
+		   ((eq dir 'up) (%%move-up%%))
+		   (t (error "forward")))))
+	(let ((i 0))
+	  (dolist (code codes)
+	    (incf i)
+	    (cond
+	      ((eq code 'r) (format t "code (~a) => turn right~%" i) (turn-right))
+	      ((eq code 'l) (format t "code (~a) => turn left~%" i)(turn-left))
+	      ((integerp code)
+	       (format t "code (~a) => moving ~a steps forward in direction ~a~%" i code dir)
+	       (forward code))
+	      (t (error "fun")))))))))
+
+
+
+
+
+
+
+
+      
+	     
 
 
 
