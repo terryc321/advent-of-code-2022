@@ -466,6 +466,49 @@
        (t (error "bad char forward-south"))))))
 
 
+;;   Facing is 0 for right (>), 1 for down (v), 2 for left (<), and 3 for up (^)
+(define (facing)
+  (cond
+   ((eq? %direction 'east) 0)
+   ((eq? %direction 'south) 1)
+   ((eq? %direction 'west) 2)
+   ((eq? %direction 'north) 3)
+   (#t (error "facing"))))
+   
+
+(define (formula)
+  (+ (* 1000 %y)
+     (* 4 %x)
+     (facing)))
+   
+
+
+(define (solve codes)
+  (format #t "at ~a ~a ~%" %x %y)
+  (cond
+   ((null? codes) (list 'column_or_x= %x 'row_or_y= %y 'formula (formula)))
+   (#t (let ((op (car codes)))
+	 (cond
+	  ((or (eq? op 'L)(eq? op 'l)) (turn-left))
+	  ((or (eq? op 'R)(eq? op 'r)) (turn-right))
+	  ((integer? op) (forward op))
+	  (#t (error "bad op")))
+	 (solve (cdr codes))))))
+
+
+
+(define (part1)
+  (solve codes))
+
+
+#|
+(part1)
+$128 = (column_or_x= 147 row_or_y= 3 formula 3590)
+scheme@(guile-user)> 
+
+.... 3590 .... answer ACCEPTED !!
+
+|#
 
 
 
