@@ -5,12 +5,32 @@
 ;; auto-complete-mode
 ;; ac-geiser-setup
 
-;; (let ((slib-src-path "/home/terry/src/slib/slib"))
-;;   (when (not (member slib-src-path %load-path))
-;;     (add-to-load-path slib-src-path)
-;;     (load (string-append slib-src-path "/guile-3.init"))))
 
 (use-modules (ice-9 rdelim))
+
+;; make slib available if required
+
+;; depending on how we load guile the init file may or may not have been loaded
+(let ((slib-src-path "/home/terry/src/slib/slib"))
+  (when (not (member slib-src-path %load-path))
+    (add-to-load-path slib-src-path)
+    (load (string-append slib-src-path "/guile-3.init"))))
+(use-modules (ice-9 slib))
+
+;; (require 'factor)
+
+;; line-i/o is not available for guile scheme !! use rdelim instead 
+;; (require 'line-i/o) 
+
+;; make optional arguments more convenient using lambda* form instead of lambda
+(use-modules (ice-9 optargs))
+ ;; (lambda* (foo #:optional (bar 42) #:key (baz 73))
+ ;;               (list foo bar baz))
+;; foo is a fixed argument, bar is an optional argument with default value 42, and baz is a keyword argument with default value 73. Default value expressions are not evaluated unless they are needed, and until the procedure is called.
+
+(use-modules (ice-9 format))
+
+(use-modules (ice-9 pretty-print))
 
 ;; (use-modules (ice-9 slib))
 ;; (require 'line-i/o)
@@ -41,8 +61,12 @@
 (define input (reverse (cdr (cdr (reverse (readlines "input.txt"))))))
 
 ;; some dangerous lovely common lisp like macros
-(defmacro incf (x)
+(defmacro incf! (x)
   `(set! ,x (+ ,x 1)))
+
+(defmacro decf! (x)
+  `(set! ,x (- ,x 1)))
+
 
 (defmacro setq (x y)
   `(set! ,x ,y))
@@ -52,6 +76,15 @@
 
 (defmacro null (x)
   `(null? ,x))
+
+
+(defmacro assert (x)
+  `(when (not ,x) (error x)))
+
+(defmacro assert2 (x msg)
+  `(when (not ,x) (error ,msg)))
+
+
 
 ;; macro-expander works in guile geiser
 ;; (let ((x 1)) (incf x ) x)
@@ -69,7 +102,7 @@
 	(cond
 	 ((null lines) #f)
 	 (#t (let ((line (car lines)))
-	       (incf y)
+	       (incf! y)
 	       (when (or (not max-y)(> y max-y)) (setq max-y y))
 	       (setq x 0)
 	       (let ((len (string-length line)))
@@ -77,7 +110,7 @@
 		   (cond
 		    ((<= i (- len 1)) 
 		     (let ((ch (string-ref line i)))	    
-		       (incf x)
+		       (incf! x)
 		       (when (or (not max-x)(> x max-x)) (setq max-x x))	      
 		       (when (or (char= ch #\.) (char= ch #\#))
 			 (hash-set! hash (list x y) ch)
@@ -91,126 +124,6 @@
       hash)))
 
 (define grid (lines->hash input))
-
-;; optional arguments using lambda*
-(define lookup
-  (lambda* (x y #:optional (default #f))
-    (hash-ref grid (list x y) default)))
-
-
-
-
-
-#|
-(defun turn-left ()
-  (cond
-    ((eq *direction* 'east) (setq *direction* 'north))
-    ((eq *direction* 'north) (setq *direction* 'west))
-    ((eq *direction* 'west) (setq *direction* 'south))
-    ((eq *direction* 'south) (setq *direction* 'east))
-    (t (error "bad dir turn-left"))))
-
-
-(defun turn-right ()
-  (cond
-    ((eq *direction* 'east) (setq *direction* 'south))
-    ((eq *direction* 'north) (setq *direction* 'east))
-    ((eq *direction* 'west) (setq *direction* 'north))
-    ((eq *direction* 'south) (setq *direction* 'west))
-    (t (error "bad dir turn-right"))))
-
-
-(defun forward (n)
-  (cond
-    ((eq *direction* 'east) (forward-east n))
-    ((eq *direction* 'north) (forward-north n))
-    ((eq *direction* 'west) (forward-west n))
-    ((eq *direction* 'south) (forward-south n))
-    (t (error "bad dir forward"))))
-	   
-
-|#
-
-
-#|
-;; load the input file and turn it into a 2d grid
-;; turn left
-;; turn right
-;; codes
-;; figure out where end up
-;; maybe use some macros to
-;; use asserts to enforce 
-
-;; ;; globals at top 
-;; (defparameter *x* 51)
-;; (defparameter *y* 1)
-;; (defparameter *direction* 'east)
-
-#|
-(defun read-lines (filename)
-  (with-open-file (stream filename)
-    (loop for line = (read-line stream nil)
-          while line
-          collect line)))
-
-
-;; line is a string
-(defun convert-lines-to-grid (lines)
-  (let ((x 0)(y 0)(max-x nil)(max-y nil))
-    (loop for line in lines do
-      (incf y)
-      (when (or (not max-y)(> y max-y)) (setq max-y y))
-      (setq x 0)
-      (let ((len (length line)))
-	(loop for i from 0 to (- len 1) do
-	  (let ((ch (aref line i)))	    
-	    (incf x)
-	    (when (or (char= ch #\.) (char= ch #\#))
-	      (when (or (not max-x)(> x max-x)) (setq max-x x))	      
-	      ;;(format t "(~a,~a) <- (~a)~%" x y ch)
-	      )))))
-    ;;(list max-x max-y)
-    (let ((grid (make-array (list (+ 1 max-x) (+ 1 max-y))
-			    :element-type 'character
-			    :initial-element #\_)))
-      (setq x 0)
-      (setq y 0)
-      (loop for line in lines do
-	(incf y)
-	(setq x 0)
-	(let ((len (length line)))
-	  (loop for i from 0 to (- len 1) do
-	    (let ((ch (aref line i)))	    
-	      (incf x)
-	      (when (or (char> #\space) (char= ch #\.) (char= ch #\#))
-		;; (break)
-		(setf (aref grid x y) ch)
-		;;(format t "(~a,~a) <- (~a)~%" x y ch)
-		)))))
-      grid)))
-|#
-
-
-
-
-
-
-
-#|
-;; aref takes x y as exploded args not as a list !!
-(let ((arr (make-array (list 2 3) :element-type 'character
-				  :initial-element #\_)))
-  (setf (aref arr 0 0) #\e)
-  (aref arr 0 0))
-|#
-
-
-
-	    
-
-
-(define grid (convert-lines-to-grid
-		       (reverse (cdr (cdr (reverse (read-lines "input.txt")))))))
 
 (define codes
   '(5 L 37 R 32 R 38 R 28 L 18 R 11 R 37 R 41 R 42 L 8 L 3 R 14 L 22
@@ -363,258 +276,198 @@
     R 38 L 37 R 34 R 32 L 9 L 26 R 50 L 47 L 25 R 18 R 46 R 47 R 42 L
     35 R 8))
 
+
+;; optional arguments using lambda*
+(define lookup
+  (lambda* (x y #:optional (default #f))
+    (hash-ref grid (list x y) default)))
+
+(define %x 51)
+
+(define %y 1)
+
+(define %direction 'east)
+
+(defmacro eq (x y)
+  `(eq? ,x ,y))
+
+(define (turn-left)
+  (cond
+    ((eq %direction 'east) (setq %direction 'north))
+    ((eq %direction 'north) (setq %direction 'west))
+    ((eq %direction 'west) (setq %direction 'south))
+    ((eq %direction 'south) (setq %direction 'east))
+    (t (error "bad dir turn-left"))))
+
+
+(define (turn-right)
+  (cond
+    ((eq %direction 'east) (setq %direction 'south))
+    ((eq %direction 'north) (setq %direction 'east))
+    ((eq %direction 'west) (setq %direction 'north))
+    ((eq %direction 'south) (setq %direction 'west))
+    (t (error "bad dir turn-right"))))
+
+
+(define (forward n)
+  (cond
+    ((eq %direction 'east) (forward-east n))
+    ((eq %direction 'north) (forward-north n))
+    ((eq %direction 'west) (forward-west n))
+    ((eq %direction 'south) (forward-south n))
+    (t (error "bad dir forward"))))
+	   
+
 ;; consistency check ?
 ;; check *codes* reproduce input line ?
 ;; check *lines* reproduce input txt ??
 
-#|
-;; show the grid
-(defun show (g)
-  (destructuring-bind (width height) (array-dimensions g)
-    (decf width)
-    (decf height)
-    (loop for y from 1 to height do
-      (format t "~%")
-      (loop for x from 1 to width do
-	(let ((ch (aref g x y)))
+(define (show g)
+  (let ((width (hash-ref g 'max-x))
+	(height (hash-ref g 'max-y)))
+    (let loop-y ((y 1))
+      (cond
+       ((<= y height)
+	(format t "~%")
+	(let loop-x ((x 1))
 	  (cond
-	    ((char= ch #\_) (format t " "))
-	    (t (or (char= ch #\.) (char= ch #\#))
-	       (format t "~a" ch))
-	    (t (error "show bad char"))))))
-    (format t "~%")))
-|#
-
-
-;; redefine show 
-(defun show (g)
-  (let ((width (gethash 'max-x g))
-	(height (gethash 'max-y g)))
-    (loop for y from 1 to height do
-      (format t "~%")
-      (loop for x from 1 to width do
-	(let ((ch (gethash (list x y) g)))
-	  (cond
-	    ((not ch) (format t " "))
-	    (t (or (char= ch #\.) (char= ch #\#))
-	       (cond
-		 ((and (= x *x*)(= y *y*)) (format t "(~a)" ch))
-		 (t (format t "~a" ch))))))))
+	   ((<= x width)
+	      (let ((ch (hash-ref g (list x y) #f)))
+		(cond
+		 ((not ch) (format t " "))
+		 (t (or (char= ch #\.) (char= ch #\#))
+		    (cond
+		     ((and (= x %x)(= y %y)) (format t "(~a)" ch))
+		     (t (format t "~a" ch))))))
+	      (loop-x (+ x 1)))))
+	(loop-y (+ y 1)))))
     (format t "~%")))
 
 
 
 
-
-#|
-;; consistency check
-
-(with-open-file (stream "input.dat" :direction :output :if-exists :supersede)
-  (let ((*standard-output* stream))
-   (show *grid*)))
-
-start square is 51 1
-
-|#
-
-
-(defun turn-left ()
-  (cond
-    ((eq *direction* 'east) (setq *direction* 'north))
-    ((eq *direction* 'north) (setq *direction* 'west))
-    ((eq *direction* 'west) (setq *direction* 'south))
-    ((eq *direction* 'south) (setq *direction* 'east))
-    (t (error "bad dir turn-left"))))
-
-
-(defun turn-right ()
-  (cond
-    ((eq *direction* 'east) (setq *direction* 'south))
-    ((eq *direction* 'north) (setq *direction* 'east))
-    ((eq *direction* 'west) (setq *direction* 'north))
-    ((eq *direction* 'south) (setq *direction* 'west))
-    (t (error "bad dir turn-right"))))
+(define (forward-west n)
+  (when (> n 0)
+    ;; peek at square x-1 y
+    (let ((peek (lookup (- %x 1) %y)))
+      (cond
+       ((not peek) ;; off grid!
+	(let ((x2 %x)(y2 %y)) ;; keep moving left until we fall off grid
+	  (call/cc (lambda (exit) 
+		     (let loop ()
+		       (let ((got (lookup x2 y2)))
+			 (cond
+			  ((char? got) (incf! x2) (loop))
+			  (t (decf! x2) ;; backup
+			     (exit t)))))))
+	  (let (($out (lookup x2 y2)))
+	    (assert2 (char? $out) (format #f "forward-west ~a" $out))
+	    (cond
+	     ;; if meet a gate terminate
+	     ((char=? #\# $out) #f) 
+	     (t (set! %x x2)
+		(set! %y y2)
+		(forward-west (- n 1)))))))
+	((char=? peek #\.) ;; base case - move left
+	 (decf! %x)
+	 (forward-west (- n 1)))
+	((char=? peek #\#) #f)
+	(t (error "bad char forward-west"))))))
 
 
-(defun forward (n)
-  (cond
-    ((eq *direction* 'east) (forward-east n))
-    ((eq *direction* 'north) (forward-north n))
-    ((eq *direction* 'west) (forward-west n))
-    ((eq *direction* 'south) (forward-south n))
-    (t (error "bad dir forward"))))
-	   
-(defun lookup (x y &optional default)
-  (gethash (list x y) *grid* default))
 
 
-(defun forward-east (n)
-  ;; peek at square x+1 y
-  (let ((peek (lookup (+ *x* 1) *y* 'na)))
-    (cond
-      ((eq peek 'na) ;; off *grid*
-       (let ((x2 *x*)(y2 *y*)) ;; keep moving left until we fall off grid
-	 (catch 'looped 
-	   (loop while t do
-	     (let ((got (lookup x2 y2)))
-	       (cond
-		 ((characterp got) (decf x2))
-		 (t (throw 'looped t))))))
-	 (assert (characterp (lookup x2 y2)))	 
-	 (cond
+(define (forward-east n)
+  (when (> n 0)
+    ;; peek at square x+1 y
+    (let ((peek (lookup (+ %x 1) %y)))
+      (cond
+       ((not peek) ;; off *grid*
+	(let ((x2 %x)(y2 %y)) ;; keep moving left until we fall off grid
+	  (call/cc (lambda (exit) 
+		     (let loop ()
+		       (let ((got (lookup x2 y2)))
+			 (cond
+			  ((char? got) (decf! x2)(loop))
+			  (t
+			   (incf! x2) ;; backup one square
+			   (exit t)))))))
+	  (assert2 (char? (lookup x2 y2)) "forward-east : lookup is char")	 
+	  (cond
 	   ;; if meet a gate terminate
-	   ((char= #\# (lookup x2 y2)) nil) 
-	   (t (setq *x* x2)
-	      (setq *y* y2)
+	   ((char=? #\# (lookup x2 y2)) #f) 
+	   (t (set! %x x2)
+	      (set! %y y2)
 	      (forward-east (- n 1))))))
-      ((char= peek #\.)
-       (incf *x*)
-       (forward-east (- n 1)))
-      ((char= peek #\#) nil)
-      (t (error "bad char forward-east")))))
+       ((char=? peek #\.)
+	(incf! %x)
+	(forward-east (- n 1)))
+       ((char=? peek #\#) #f)
+       (t (error "bad char forward-east"))))))
 
 
 
-(defun forward-west (n)
-  ;; peek at square x-1 y
-  (let ((peek (gethash (list (- *x* 1) *y*) *grid* 'na)))
-    (cond
-      ((eq peek 'na) ;; off *grid*
-       (let ((x2 *x*)) ;; keep moving right until we fall off grid
-	 (loop while (gethash (list x2 *y*) *grid*) do
-	   (incf x2))
-	 (assert (null (gethash (list x2 *y*) *grid*)))
-	 (assert (gethash (list (- x2 1) *y*) *grid*)) ;; backup one square
-	 (cond
-	   ((char= #\# (gethash (list (- x2 1) *y*) *grid*)) nil) ;; squash
-	   (t (setq *x* (- x2 1)) ;; successful wrap around
-	      (forward-west (- n 1))))))
-      ;; otherwise simple case move west
-      ((char= peek #\.) (setq *x* (- *x* 1)) (forward-west (- n 1)))
-      ;; hit barrier stop - we have not changed position
-      ((char= peek #\#) nil)
-      (t (error "bad char forward-west")))))
+(define (forward-north n)
+  (when (> n 0)
+    ;; peek at square x y-1
+    (let ((peek (lookup %x (- %y 1))))
+      (cond
+       ((not peek) ;; off *grid*
+	(let ((x2 %x)(y2 %y)) ;; keep moving left until we fall off grid
+	  (call/cc (lambda (exit) 
+		     (let loop ()
+		       (let ((got (lookup x2 y2)))
+			 (cond
+			  ((char? got) (incf! y2)(loop))
+			  (t
+			   (decf! y2) ;; backup one square
+			   (exit t)))))))
+	  (assert2 (char? (lookup x2 y2)) "forward-north : lookup is char")	 
+	  (cond
+	   ;; if meet a gate terminate
+	   ((char=? #\# (lookup x2 y2)) #f) 
+	   (t (set! %x x2)
+	      (set! %y y2)
+	      (forward-north (- n 1))))))
+       ((char=? peek #\.)
+	(decf! %y)
+	(forward-north (- n 1)))
+       ((char=? peek #\#) #f)
+       (t (error "bad char forward-north"))))))
 
 
 
-
-
-
-
-#|
-(defun forward-south (n)
-  (let ((peek (gethash (list x (+ y 1)) *grid* 'na))) ;; look down south
-    (cond
-      ((eq peek 'na) ;; off *grid*
-       (let ((y2 y)) ;; keep scrolling up while we have a valid character at x y2
-	 (loop while (gethash (list x y2) *grid*) do
-	   (setq y2 (- y 1)))
-	 (assert (null (gethash x y2)))
-	 (assert (gethash x  (- y2 1)))
-	 (cond
-	   ((char= peek #\# (gethash x (- y2 1))) nil) ;; squash
-	   (t (setq y (- y2 1))
+(define (forward-south n)
+  (when (> n 0)
+    ;; peek at square x y+1
+    (let ((peek (lookup %x (+ %y 1))))
+      (cond
+       ((not peek) ;; off *grid*
+	(let ((x2 %x)(y2 %y)) ;; keep moving left until we fall off grid
+	  (call/cc (lambda (exit) 
+		     (let loop ()
+		       (let ((got (lookup x2 y2)))
+			 (cond
+			  ((char? got) (decf! y2)(loop))
+			  (t
+			   (incf! y2) ;; backup one square
+			   (exit t)))))))
+	  (assert2 (char? (lookup x2 y2)) "forward-north : lookup is char")	 
+	  (cond
+	   ;; if meet a gate terminate
+	   ((char=? #\# (lookup x2 y2)) #f) 
+	   (t (set! %x x2)
+	      (set! %y y2)
 	      (forward-south (- n 1))))))
-      ((char= peek #\.) (setq y (+ x 1)) (forward-south (- n 1)))
-      ((char= peek #\#) nil)
-      (t (error "bad char forward-south")))))
-	   
+       ((char=? peek #\.)
+	(incf! %y)
+	(forward-south (- n 1)))
+       ((char=? peek #\#) #f)
+       (t (error "bad char forward-south"))))))
 
 
 
-(defun solve ()
-  (let* ((codes *codes*)
-	 (grid *grid*)
-	 (max-x (gethash 'max-x grid))
-	 (max-y (gethash 'max-y grid)))	
-    (solve2 codes grid 51 1 'east max-x max-y)))
 
-(defun solve2 (codes grid x y direction max-x max-y)
-  (assert (>= x 1))
-  (assert (>= y 1))
-  (assert (<= x max-x))
-  (assert (<= y max-y))
-  (assert (member direction '(north south east west)))
-  (labels ((turn-left () (cond
-			   ((eq direction 'east) (setq direction 'north))
-			   ((eq direction 'north) (setq direction 'west))
-			   ((eq direction 'west) (setq direction 'south))
-			   ((eq direction 'south) (setq direction 'east))
-			   (t (error "bad dir turn-left"))))
-	   (turn-right () (cond
-			   ((eq direction 'east) (setq direction 'south))
-			   ((eq direction 'north) (setq direction 'east))
-			   ((eq direction 'west) (setq direction 'north))
-			   ((eq direction 'south) (setq direction 'west))
-			   (t (error "bad dir turn-right"))))
-	   (forward (n) (cond
-			   ((eq direction 'east) (forward-east n))
-			   ((eq direction 'north) (forward-north n))
-			   ((eq direction 'west) (forward-west n))
-			   ((eq direction 'south) (forward-south n))
-			   (t (error "bad dir forward"))))
-	   (forward-east (n)
-	     (let ((peek (gethash (list (+ x 1) y) grid 'na)))
-	       (cond
-		 ((eq peek 'na) ;; off grid
-		  (let ((x2 x))
-		    (loop while (gethash (list x2 y) grid) do
-		      (setq x2 (- x 1)))
-		    (assert (null (gethash x2 y)))
-		    (assert (gethash (+ x2 1) y))
-		    (cond
-		      ((char= peek #\# (gethash (+ x2 1) y)) nil) ;; squash
-		      (t (setq x (+ x2 1))
-			 (forward-east (- n 1))))))
-		 ((char= peek #\.) (setq x (+ x 1)) (forward-east (- n 1)))
-		 ((char= peek #\#) nil)
-		 (t (error "bad char forward-east")))))
-	   ;; west
-	   (forward-west (n)
-	     (let ((peek (gethash (list (- x 1) y) grid 'na)))
-	       (cond
-		 ((eq peek 'na) ;; off grid
-		  (let ((x2 x))
-		    (loop while (gethash (list x2 y) grid) do
-		      (setq x2 (+ x 1)))
-		    (assert (null (gethash x2 y)))
-		    (assert (gethash (- x2 1) y))
-		    (cond
-		      ((char= peek #\# (gethash (- x2 1) y)) nil) ;; squash
-		      (t (setq x (- x2 1))
-			 (forward-west (- n 1))))))
-		 ((char= peek #\.) (setq x (- x 1)) (forward-west (- n 1)))
-		 ((char= peek #\#) nil)
-		 (t (error "bad char forward-west")))))
-	   ;; north
-	   (forward-north (n)
-	     (let ((peek (gethash (list x (- y 1)) grid 'na)))
-	       (cond
-		 ((eq peek 'na) ;; off grid
-		  (let ((y2 y))
-		    (loop while (gethash (list x y2) grid) do
-		      (setq y2 (+ y 1)))
-		    (assert (null (gethash x y2)))
-		    (assert (gethash x  (- y2 1)))
-		    (cond
-		      ((char= peek #\# (gethash x (- y2 1))) nil) ;; squash
-		      (t (setq y (- y2 1))
-			 (forward-north (- n 1))))))
-		 ((char= peek #\.) (setq x (- x 1)) (forward-north (- n 1)))
-		 ((char= peek #\#) nil)
-		 (t (error "bad char forward-north")))))
-	   
-	   
-			   
-  (cond
-    ((null codes) (list 'x= x 'y= y))
-    (t (let ((op (car codes)))
-	 (cond
-	   ((or (eq op 'L)(eq op 'l)) (turn-left))
-	   ((or (eq op 'R)(eq op 'r)) (turn-right))
-	   ((integerp op) (forward op))
-	   (t (error "bad op")))
-	 (solve2 (cdr codes) grid x y)))))
-|#
-|#
+
+
 
