@@ -1,6 +1,4 @@
 
-{-
-
 aoc 2022 day 19
 
 start with 1 ore robot
@@ -41,13 +39,4 @@ state will be a record
 time step 
 number of robots ore clay obsidian geode
 number of (ore)  ore clay obsidian geode
-
-
-
--}
-
-
-
-
-
 
