@@ -1,6 +1,12 @@
 
 
 #|
+
+TODO TODO TODO /////..... some way to write these routines so its not so much a ball ache
+perhaps using some macros and eval ...
+
+
+
 scheme for the win
 aoc2022 day 19 
 
@@ -25,8 +31,18 @@ rocks  ore clay obsidian geode
 (define* (my-function #:key (param1 1) (param2 "default"))
   (format #t "param1: ~A, param2: ~A~%" param1 param2))
 
-;; calling 
+;; calling / using the procedure with named parameters
 ;;(my-function #:param1 1 #:param2 2)
+
+(define* (my-function2 #:key
+		       (param1 (error "badparam 1"))
+		       (param2 (error "badparam2 default")))
+  (format #t "param1: ~A, param2: ~A~%" param1 param2))
+
+(my-function2 #:param1 1 #:param2 2)
+(my-function2 #:param1 1 )
+
+
 
 ;; records
 (use-modules (srfi srfi-9))
@@ -83,20 +99,28 @@ Blueprint 2:
 ;; otherwise rocks
 
 (define cost-robot-ore-ore 4)
+
 (define cost-robot-clay-ore 2)
+
 (define cost-robot-obs-ore 3)
 (define cost-robot-obs-clay 14)
+
 (define cost-robot-geo-ore 2)
 (define cost-robot-geo-obs 7)
+
 (define max-geo-produced 0)
 
 (define (blueprint1)
   (set! cost-robot-ore-ore 4)
+
   (set! cost-robot-clay-ore 2)
+
   (set! cost-robot-obs-ore 3)
   (set! cost-robot-obs-clay 14)
+
   (set! cost-robot-geo-ore 2)
   (set! cost-robot-geo-obs 7)
+
   (set! max-geo-produced 0)
   (run))
 
@@ -118,17 +142,46 @@ Blueprint 2:
 
 (define (run)
   (let ((time 0)
-	(ore 0)
-	(clay 0)
-	(obs 0)
-	(geo 0)
+	(ore 0)	(clay 0)(obs 0)	(geo 0)
 	(robot-ore 1)(robot-clay 0)(robot-obs 0)(robot-geo 0)
 	(buy-ore 0)(buy-clay 0)(buy-obs 0)(buy-geo 0))
     (decide time ore clay obs geo
 	    robot-ore robot-clay robot-obs robot-geo
 	    buy-ore buy-clay buy-obs buy-geo)))
 
+;; end condition is when time expires
+;; (define (decide time ore clay obs geo robot-ore robot-clay robot-obs robot-geo)
+;;   (cond
+;;    ((> time 24) (report geo))
+;;    (#t
+    
+;;     )))
 
+(define* (decide #:key
+		 (time (error "badparam"))
+		 (ore (error "badparam"))
+		 (clay (error "badparam"))
+		 (obs (error "badparam"))
+		 (geo (error "badparam"))
+		 (robot-ore (error "badparam"))
+		 (robot-clay (error "badparam"))
+		 (robot-obs (error "badparam"))
+		 (robot-geo (error "badparam")))
+  (cond
+   ((> time 25) (report geo))
+   (#t ;;
+
+
+
+
+    
+    
+
+(my-function2 #:param1 1 #:param2 2)
+(my-function2 #:param1 1 )
+
+  
+#|
 (define decide
   (lambda (time ore clay obs geo 
   		robot-ore robot-clay robot-obs robot-geo
@@ -170,17 +223,8 @@ Blueprint 2:
 		(+ robot-ore buy-ore) (+ robot-clay buy-clay) (+ robot-obs buy-obs)
 		(+ robot-geo buy-geo)
 		buy-ore2 buy-clay2 buy-obs2 buy-geo2))
-
       ))))
-
-
-
-
-    
-    
-
-		     
-
+|#
 
 #|
 (define next
