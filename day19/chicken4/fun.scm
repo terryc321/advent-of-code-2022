@@ -112,25 +112,62 @@ we begin with 1 ore robot
 ;; from a given state -- derive the next possible states 
 ;; hopefully they should be all unique
 
+(define (show-state s)
+  (format #t "* state * ~%")
+  (format #t "* minerals : ~a ~a ~a ~a~%" (state-m1 s) (state-m2 s) (state-m3 s) (state-m4 s))
+  (format #t "* robots   : ~a ~a ~a ~a~%" (state-r1 s) (state-r2 s) (state-r3 s) (state-r4 s))
+  (format #t "* building : ~a ~a ~a ~a~%" (state-b1 s) (state-b2 s) (state-b3 s) (state-b4 s)))
+
+(define (show-blueprint s)
+  (format #t "* blueprint * ~%")
+  (format #t "* ore      : ~a ~a ~a ~%" (blueprint-o1 s) (blueprint-o2 s) (blueprint-o3 s))
+  (format #t "* clay     : ~a ~a ~a ~%" (blueprint-c1 s) (blueprint-c2 s) (blueprint-c3 s))
+  (format #t "* obsidian : ~a ~a ~a ~%" (blueprint-p1 s) (blueprint-p2 s) (blueprint-p3 s))
+  (format #t "* geode    : ~a ~a ~a ~%" (blueprint-g1 s) (blueprint-g2 s) (blueprint-g3 s)))
+
+;; debug flag 
+(define (show-state-change s s2 blue msg)
+  (when #f 
+    (format #t "state change diagram : ~a ~%" msg)
+    (show-state s)
+    (format #t " ==> ~%")
+    (show-state s2)
+    (format #t " ==> ~%")
+    (show-blueprint blue)
+    (format #t " ****** ~%")))
+
+#| 
+do we need to determine which state we have already seen before ?
+
+|#  
+
+
+;; ORE
 ;; look at blueprint of ore robots o1 o2 o3 
 (define (find-next-states-1 state blue)
+  ;;(format #t "entering find-next-states-1~%")
   (let ((o1 (blueprint-o1 blue)) (o2 (blueprint-o2 blue)) (o3 (blueprint-o3 blue))
         (m1 (state-m1 state)) (m2 (state-m2 state)) (m3 (state-m3 state)) (m4 (state-m4 state))
         (r1 (state-r1 state)) (r2 (state-r2 state)) (r3 (state-r3 state)) (r4 (state-r4 state))
         (b1 0) (b2 0) (b3 0) (b4 0)
         (next '()))
-    ;; attempt to buy n ore robots for a given blueprint and current mineral levels
+    ;; 
     (letrec ((foo (lambda (n)                     
                       (cond 
                        ((and (<= (* n o1) m1)
                              (<= (* n o2) m2)
                              (<= (* n o3) m3))
-                        (format #t "we can afford to buy ~a ore robots~%" n)
-                        (let ((state2 (make-state (- m1 (* n o1)) (- m2 (* n o2)) (- m3 (* n o3))  m4
-                                                  r1 r2 r3 r4
-                                                  n 0 0 0)))
-                          (set! next (cons state2 next))
-                          (foo (+ n 1))))
+                        (let ((em1 (- m1 (* n o1)))
+                              (em2 (- m2 (* n o2)))
+                              (em3 (- m3 (* n o3)))
+                              (em4 m4))
+                          (let ((state2 (make-state em1 em2 em3 em4
+                                                    r1 r2 r3 r4
+                                                    n 0 0 0)))
+                            (set! next (cons state2 next))
+                            ;; (let ((msg (format #f "we can afford to buy ~a ore robots~%" n)))
+                            ;;   (show-state-change state state2 blue msg))
+                            (foo (+ n 1)))))
                        (#t #f)))))
       (foo 0)
       next
@@ -138,25 +175,32 @@ we begin with 1 ore robot
 
 
 
-;; look at blueprint of clay robots c1 c2 c3 
+;; CLAY
 (define (find-next-states-2 state blue)
+  ;;(format #t "entering find-next-states-2~%")
   (let ((c1 (blueprint-c1 blue)) (c2 (blueprint-c2 blue)) (c3 (blueprint-c3 blue))
         (m1 (state-m1 state)) (m2 (state-m2 state)) (m3 (state-m3 state)) (m4 (state-m4 state))
         (r1 (state-r1 state)) (r2 (state-r2 state)) (r3 (state-r3 state)) (r4 (state-r4 state))
         (b1 (state-b1 state)) (b2 0) (b3 0) (b4 0)
         (next '()))
-    ;; attempt to buy n clay robots for a given blueprint and current mineral levels
+    ;;
     (letrec ((foo (lambda (n)                     
                       (cond 
                        ((and (<= (* n c1) m1)
                              (<= (* n c2) m2)
                              (<= (* n c3) m3))
-                        (format #t "we can afford to buy ~a clay robots~%" n)
-                        (let ((state2 (make-state (- m1 (* n c1)) (- m2 (* n c2)) (- m3 (* n c3))  m4
+                        ;; 
+                        (let ((em1 (- m1 (* n c1)))
+                              (em2 (- m2 (* n c2)))
+                              (em3 (- m3 (* n c3)))
+                              (em4 m4))
+                        (let ((state2 (make-state em1 em2 em3 em4
                                                   r1 r2 r3 r4
                                                   b1 n 0 0)))
                           (set! next (cons state2 next))
-                          (foo (+ n 1))))
+                          ;; (let ((msg (format #f "we can afford to buy ~a clay robots~%" n)))
+                          ;;   (show-state-change state state2 blue msg))
+                          (foo (+ n 1)))))
                        (#t #f)))))
       (foo 0)
       next
@@ -165,59 +209,82 @@ we begin with 1 ore robot
 
 
 
-;; look at blueprint of obsidian robots p1 p2 p3
+;; OBSIDIAN 
 (define (find-next-states-3 state blue)
+  ;;(format #t "entering find-next-states-3~%")
   (let ((p1 (blueprint-p1 blue)) (p2 (blueprint-p2 blue)) (p3 (blueprint-p3 blue))
         (m1 (state-m1 state)) (m2 (state-m2 state)) (m3 (state-m3 state)) (m4 (state-m4 state))
         (r1 (state-r1 state)) (r2 (state-r2 state)) (r3 (state-r3 state)) (r4 (state-r4 state))
         (b1 (state-b1 state)) (b2 (state-b2 state)) (b3 0) (b4 0)
         (next '()))
-    ;; attempt to buy n clay robots for a given blueprint and current mineral levels
+    ;;
     (letrec ((foo (lambda (n)                     
                       (cond 
                        ((and (<= (* n p1) m1)
                              (<= (* n p2) m2)
                              (<= (* n p3) m3))
-                        (format #t "we can afford to buy ~a obsidian robots~%" n)
-                        (let ((state2 (make-state (- m1 (* n p1)) (- m2 (* n p2)) (- m3 (* n p3))  m4
+                        ;; 
+                        (let ((em1 (- m1 (* n p1)))
+                              (em2 (- m2 (* n p2)))
+                              (em3 (- m3 (* n p3)))
+                              (em4 m4))
+                        (let ((state2 (make-state em1 em2 em3 em4
                                                   r1 r2 r3 r4
                                                   b1 b2 n 0)))
                           (set! next (cons state2 next))
-                          (foo (+ n 1))))
+                          ;; (let ((msg (format #f "we can afford to buy ~a obsidian robots~%" n)))
+                          ;;   (show-state-change state state2 blue msg))
+                          (foo (+ n 1)))))
                        (#t #f)))))
       (foo 0)
       next
       )))
 
-                                 
+   
+;; GEODE                              
 ;; look at blueprint of geode robots g1 g2 g3
 (define (find-next-states-4 state blue)
+  ;;(format #t "entering find-next-states-4~%")
   (let ((g1 (blueprint-g1 blue)) (g2 (blueprint-g2 blue)) (g3 (blueprint-g3 blue))
         (m1 (state-m1 state)) (m2 (state-m2 state)) (m3 (state-m3 state)) (m4 (state-m4 state))
         (r1 (state-r1 state)) (r2 (state-r2 state)) (r3 (state-r3 state)) (r4 (state-r4 state))
         (b1 (state-b1 state)) (b2 (state-b2 state)) (b3 (state-b3 state)) (b4 0)
         (next '()))
-    ;; attempt to buy n clay robots for a given blueprint and current mineral levels
+    ;;
     (letrec ((foo (lambda (n)                     
                       (cond 
                        ((and (<= (* n g1) m1)
                              (<= (* n g2) m2)
                              (<= (* n g3) m3))
-                        (format #t "we can afford to buy ~a geode robots~%" n)
-                        (let ((state2 (make-state (- m1 (* n g1)) (- m2 (* n g2)) (- m3 (* n g3))  m4
+                        ;;
+                        (let ((em1 (- m1 (* n g1)))
+                              (em2 (- m2 (* n g2)))
+                              (em3 (- m3 (* n g3)))
+                              (em4 m4))
+                        (let ((state2 (make-state em1 em2 em3 em4
                                                   r1 r2 r3 r4
                                                   b1 b2 b3 n)))
                           (set! next (cons state2 next))
-                          (foo (+ n 1))))
+                          ;; (let ((msg (format #f "we can afford to buy ~a geode robots~%" n)))
+                          ;;   (show-state-change state state2 blue msg))                          
+                          (foo (+ n 1)))))
                        (#t #f)))))
       (foo 0)
       next
       )))
                                      
 
+;; (define (compactor xxs)
+;;   (foreach xxs (lambda (xs)
+;;                  (foreach xs (lambda (x)
+;;                                (insert! x)))))
+;;   ;; retrieve all entries 
+
+
+
 ;; are we concerned about duplicate states ?
 (define (find-next-states clock limit states blue)
-  (format #t "clock state ~a~%" clock)
+  (format #t "~% * TICK : Clock State ~a * ~%" clock)
   (cond 
    ((<= clock limit)
     ;; when clock <= 24 we keep iterating
@@ -241,9 +308,21 @@ we begin with 1 ore robot
    (#t 
     ;; when clock > limit we have completed X cycles 
     ;; determine the maximum number of geode minerals we have mined
-    ;; report
+    ;; report maximum number of geodes found
+    (format #t "max-number of geodes found = ~a~%" (max-number-of-geodes states))
     #t)))
 
+
+(define (max-number-of-geodes xs)
+  (let ((biggest 0 ))
+    (letrec ((foo (lambda (ys)
+                    (cond 
+                     ((null? ys) biggest)
+                     (#t (let ((y (car ys)))
+                           (when (> y biggest) (set! biggest y))
+                           (foo (cdr ys))))))))
+      (foo xs)
+      biggest)))
 
 
 ;; o = ore : c = clay : p = obsidian : g = geode == costs of building those robots (1)ore (2)clay (3)obsidian
@@ -251,9 +330,10 @@ we begin with 1 ore robot
 ;; m = minerals : r = robots actively working : b = building robots which come online
 ;; %m1 number of ore minerals after the tick 
 ;; sum :  number minerals now (m1) + (r1) number robots mine ore (1)
-;;    subtract  : cost ore robot in ore (o1) * (b1) number ore robots  you build
+;;    subtract  : cost ore robot in ore (o1) * (b1) number ore robots  you build 
 ;;    subtract  : cost ore robot in clay (o2) * (b1) number ore robots you build
 ;;    subtract  : cost ore robot in obsidian (o3) * (b1) number ore robots you build
+;; ** subtracts already accounted for in find-next-states1..4 **
 (define (tick-tock state blue)
   (let ((o1 (blueprint-o1 blue)) (o2 (blueprint-o2 blue)) (o3 (blueprint-o3 blue))
         (c1 (blueprint-c1 blue)) (c2 (blueprint-c2 blue)) (c3 (blueprint-c3 blue))
@@ -262,10 +342,11 @@ we begin with 1 ore robot
         (m1 (state-m1 state)) (m2 (state-m2 state)) (m3 (state-m3 state)) (m4 (state-m4 state))
         (r1 (state-r1 state)) (r2 (state-r2 state)) (r3 (state-r3 state)) (r4 (state-r4 state))
         (b1 (state-b1 state)) (b2 (state-b2 state)) (b3 (state-b3 state)) (b4 (state-b4 state)))
+    
     ;; state = m1 m2 m3 m4 r1 r2 r3 r4 b1 b2 b3 b4
-    (let ((em1 (- (+ m1 r1) (* b1 o1) (* b1 o2) (* b1 o3)))
-          (em2 (- (+ m2 r2) (* b2 c1) (* b2 c2) (* b2 c3)))
-          (em3 (- (+ m3 r3) (* b3 p1) (* b3 p2) (* b3 p3)))
+    (let ((em1 (+ m1 r1))
+          (em2 (+ m2 r2))
+          (em3 (+ m3 r3))
           (em4 (+ m4 r4)) ;; number geode minerals is before plus number of geode robots
           (er1 (+ r1 b1)) ;; number robots is current robots plus number we build of this type
           (er2 (+ r2 b2))
@@ -321,7 +402,11 @@ we begin with 1 ore robot
 ;; (rectangle-width rect2)  ; => 15
 ;; (rectangle-height rect2) ; => 20
 
-
+;; try compiling this maximum balls to the wall , but gets stuck at clock state 13 ie 
+;; 13 iterations and too many cases to consider
+;;(example1)
+;; > csc -O5 -o fun1 fun.scm
+;; ----- clearly ineffective way to search brute force ------------- ??
 
 
 
