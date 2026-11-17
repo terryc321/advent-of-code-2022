@@ -1,0 +1,4 @@
+
+bug in code on finding next state
+
+between A -> B somehow end up collecting more cash than expending it ?
