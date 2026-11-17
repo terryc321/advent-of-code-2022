@@ -40,6 +40,9 @@ to build an ORE robot takes 4 ORE
 
 buy maximal amount of ORE robots can each time 
 
+--- again brute forcing just trying 0 . . 1 .. 2 .. 3 ore robots each step 
+--- stalls at clock state 17 or (17 iterations ) 
+
 
  |#
 
@@ -279,7 +282,7 @@ do we need to determine which state we have already seen before ?
     ;; when clock > limit we have completed X cycles 
     ;; determine the maximum number of geode minerals we have mined
     ;; report maximum number of geodes found
-    (format #t "max-number of geodes found = ~a~%" (max-number-of-ore states))
+    (format #t "max-number of ores found = ~a~%" (max-number-of-ore states))
     #t)))
 
 
@@ -345,7 +348,7 @@ do we need to determine which state we have already seen before ?
 ;; entry point to explore a certain blueprint
 (define (explore-blueprint blue)
   (let ((clock 0) 
-        (clock-limit 5) ;; make this 24 for the puzzle
+        (clock-limit 24) ;; make this 24 for the puzzle
         (states (list state1)))
     (find-next-states clock clock-limit states blue)))
 
