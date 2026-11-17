@@ -261,22 +261,22 @@ we begin with 1 ore robot
         (r1 (state-r1 state)) (r2 (state-r2 state)) (r3 (state-r3 state)) (r4 (state-r4 state))
         (b1 (state-b1 state)) (b2 (state-b2 state)) (b3 (state-b3 state)) (b4 (state-b4 state)))
     ;; state = m1 m2 m3 m4 r1 r2 r3 r4 b1 b2 b3 b4
-    (let ((%m1 (- (+ m1 r1) (* b1 o1) (* b1 o2) (* b1 o3)))
-          (%m2 (- (+ m2 r2) (* b2 c1) (* b2 c2) (* b2 c3)))
-          (%m3 (- (+ m3 r3) (* b3 p1) (* b3 p2) (* b3 p3)))
-          (%m4 (+ m4 r4)) ;; number geode minerals is before plus number of geode robots
-          (%r1 (+ r1 b1)) ;; number robots is current robots plus number we build of this type
-          (%r2 (+ r2 b2))
-          (%r3 (+ r3 b3))
-          (%r4 (+ r4 b3)))
-      (let ((new-state %m1 %m2 %m3 %m4
-                       %r1 %r2 %r3 %r4
-                       0   0   0   0)) ;; default built robots to zero as not used
-        (when (or (< %m1 0)(< %m2 0)(< %m3 0)(< %m4 0))
+    (let ((em1 (- (+ m1 r1) (* b1 o1) (* b1 o2) (* b1 o3)))
+          (em2 (- (+ m2 r2) (* b2 c1) (* b2 c2) (* b2 c3)))
+          (em3 (- (+ m3 r3) (* b3 p1) (* b3 p2) (* b3 p3)))
+          (em4 (+ m4 r4)) ;; number geode minerals is before plus number of geode robots
+          (er1 (+ r1 b1)) ;; number robots is current robots plus number we build of this type
+          (er2 (+ r2 b2))
+          (er3 (+ r3 b3))
+          (er4 (+ r4 b3)))
+      ;; default built robots to zero as not used
+      (let ((new-state (make-state em1 em2 em3 em4
+                                   er1 er2 er3 er4
+                                   0   0   0   0)))
+        (when (or (< em1 0)(< em2 0)(< em3 0)(< em4 0))
           (error "bad state - negative mineral amounts??"))
         new-state))))
   
-
 
 ;; entry point to explore a certain blueprint
 (define (explore-blueprint blue)
