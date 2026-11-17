@@ -217,6 +217,7 @@ we begin with 1 ore robot
 
 ;; are we concerned about duplicate states ?
 (define (find-next-states clock limit states blue)
+  (format #t "clock state ~a~%" clock)
   (cond 
    ((<= clock limit)
     ;; when clock <= 24 we keep iterating
@@ -225,12 +226,13 @@ we begin with 1 ore robot
            ;; we need a flat list of potential states
            (phase2 (map (lambda (s) (find-next-states-2 s blue)) (apply append phase1))) 
            (phase3 (map (lambda (s) (find-next-states-3 s blue)) (apply append phase2)))
-           (phase4 (map (lambda (s) (find-next-states-4 s blue)) (apply append phase3))))
+           (phase4 (map (lambda (s) (find-next-states-4 s blue)) (apply append phase3)))
+           (premature (apply append phase4)))
       ;; phase4 represents a set of possible pre-built states before the minute has ticked
-      phase4
+      
       ;; all states in phase4
       ;; deduct build of robots from the minerals -- verify all mineral values are >= 0 and not negative
-      (let ((next-states (map (lambda (s) (tick-tock s blue)) phase4)))
+      (let ((next-states (map (lambda (s) (tick-tock s blue)) premature)))
         ;; we have n states -- potentially not unique as we do not iterate through phases to check no duplicates
         ;; whether we should?
         (format #t "length of next-states = ~a~%" (length next-states))
